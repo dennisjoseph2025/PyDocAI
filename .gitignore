@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+node_modules/
+dist/
+.venv/
+venv/
+db.sqlite3
+staticfiles/
+media/
+.DS_Store
+*.egg-info/
+PyDocAI_Backend.postman_collection.json
