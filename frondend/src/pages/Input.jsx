@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { analyzeFile, analyzeFolder, importFromGithub } from '../api'
+import { analyzeFile, analyzeFolder, importFromGithub, getGithubRepos, getGithubRepoFolders } from '../api'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
 import StepIndicator from '../components/StepIndicator'
-import { IconFile, IconArchive, IconLink, IconWarning } from '../components/Icons'
+import { IconFile, IconArchive, IconLink, IconWarning, IconFolder, IconChevron, IconRefresh } from '../components/Icons'
 
 const tabs = [
   { id: 'single', label: 'Single File',  icon: IconFile },
@@ -32,8 +32,76 @@ export default function Input() {
   const [isDragging, setIsDragging] = useState(false)
   const [loading, setLoading] = useState(false)
   const [steps, setSteps] = useState(defaultSteps)
+  const [repos, setRepos] = useState([])
+  const [selectedRepo, setSelectedRepo] = useState(null)
+  const [branches, setBranches] = useState([])
+  const [selectedBranch, setSelectedBranch] = useState('')
+  const [folders, setFolders] = useState([])
+  const [selectedFolder, setSelectedFolder] = useState('/')
+  const [loadingRepos, setLoadingRepos] = useState(false)
+  const [loadingFolders, setLoadingFolders] = useState(false)
+  const [showRepoDropdown, setShowRepoDropdown] = useState(false)
+  const [showBranchDropdown, setShowBranchDropdown] = useState(false)
+  const [showFolderDropdown, setShowFolderDropdown] = useState(false)
   const navigate = useNavigate()
   const { addToast } = useAuth()
+
+  useEffect(() => {
+    if (active === 'git') {
+      fetchRepos()
+    }
+  }, [active])
+
+  const fetchRepos = async () => {
+    setLoadingRepos(true)
+    try {
+      const res = await getGithubRepos()
+      setRepos(res.data || [])
+    } catch (err) {
+      if (err.response?.status === 400) {
+        addToast('Please connect your GitHub account first', 'error')
+      }
+    } finally {
+      setLoadingRepos(false)
+    }
+  }
+
+  const fetchFolders = async (repoFullName, branch) => {
+    setLoadingFolders(true)
+    try {
+      const res = await getGithubRepoFolders(repoFullName, branch)
+      setFolders(res.data || [])
+    } catch (err) {
+      addToast('Failed to load folders', 'error')
+    } finally {
+      setLoadingFolders(false)
+    }
+  }
+
+  const handleRepoSelect = (repo) => {
+    setSelectedRepo(repo)
+    setShowRepoDropdown(false)
+    setGitUrl(repo.html_url)
+    if (repo.branches_url && repo.default_branch) {
+      setSelectedBranch(repo.default_branch)
+      setGithubBranch(repo.default_branch)
+      fetchFolders(repo.full_name, repo.default_branch)
+    }
+  }
+
+  const handleBranchSelect = (branch) => {
+    setSelectedBranch(branch)
+    setGithubBranch(branch)
+    setShowBranchDropdown(false)
+    if (selectedRepo) {
+      fetchFolders(selectedRepo.full_name, branch)
+    }
+  }
+
+  const handleFolderSelect = (folder) => {
+    setSelectedFolder(folder.path || folder.name)
+    setShowFolderDropdown(false)
+  }
 
   const simulateSteps = () => {
     return new Promise((resolve) => {
@@ -88,14 +156,14 @@ export default function Input() {
         fd.append('description', projectDesc)
         fd.append('source_type', 'file')
         res = await analyzeFile(fd, true)
-      } else {
-        if (!gitUrl.trim()) { addToast('Please enter a Git URL', 'error'); setLoading(false); return }
-        res = await importFromGithub({ 
-          repo_url: gitUrl, 
+} else {
+        if (!selectedRepo) { addToast('Please select a repository', 'error'); setLoading(false); return }
+        res = await importFromGithub({
+          full_name: selectedRepo.full_name,
+          branch: selectedBranch || githubBranch,
+          folder_path: selectedFolder || '/',
           name: projectName,
           description: projectDesc,
-          github_branch: githubBranch,
-          source_type: 'github'
         })
       }
 
@@ -229,19 +297,134 @@ export default function Input() {
           {/* Git Tab */}
           {active === 'git' && (
             <div className="animate-fade-in space-y-4">
-              <div className="glass-card p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-ink-secondary mb-2">Repository URL</label>
-                    <input value={gitUrl} onChange={e => setGitUrl(e.target.value)} className="input-field" placeholder="https://github.com/user/repo.git" />
+              <div className="glass-card p-6 space-y-4">
+                {repos.length === 0 && !loadingRepos && (
+                  <div className="mb-4 p-4 bg-bg-surface rounded-lg border border-border">
+                    <p className="text-sm text-ink-secondary mb-3">Connect your GitHub account to import repositories</p>
+                    <a
+                      href={`https://github.com/login/oauth/authorize?client_id=${import.meta.env.VITE_GITHUB_CLIENT_ID || ''}&redirect_uri=${window.location.origin}/auth/github/callback&scope=repo`}
+                      className="inline-flex items-center gap-2 bg-ink-primary text-white px-4 py-2 rounded-lg hover:bg-ink-secondary transition-colors text-sm font-medium"
+                    >
+                      <IconLink className="w-4 h-4" />
+                      Connect GitHub
+                    </a>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-ink-secondary mb-2">Branch</label>
-                    <input value={githubBranch} onChange={e => setGithubBranch(e.target.value)} className="input-field" placeholder="main" />
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-ink-secondary mb-2">Repository</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowRepoDropdown(!showRepoDropdown)}
+                      className="w-full flex items-center justify-between input-field"
+                    >
+                      <span className={selectedRepo ? 'text-ink-primary' : 'text-ink-muted'}>
+                        {selectedRepo ? selectedRepo.full_name : 'Select a repository...'}
+                      </span>
+                      <IconChevron className="w-4 h-4 text-ink-muted" />
+                    </button>
+                    {showRepoDropdown && (
+                      <div className="absolute z-50 w-full mt-1 bg-bg-surface border border-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                        {loadingRepos ? (
+                          <div className="p-4 text-center text-ink-muted">Loading repositories...</div>
+                        ) : repos.length === 0 ? (
+                          <div className="p-4 text-center text-ink-muted">
+                            No repositories found. Connect your GitHub account first.
+                          </div>
+                        ) : (
+                          repos.map(repo => (
+                            <button
+                              key={repo.id}
+                              onClick={() => handleRepoSelect(repo)}
+                              className={`w-full text-left px-4 py-3 hover:bg-bg-primary transition-colors ${selectedRepo?.id === repo.id ? 'bg-accent/10' : ''}`}
+                            >
+                              <div className="font-medium text-ink-primary">{repo.name}</div>
+                              <div className="text-xs text-ink-muted">{repo.full_name}</div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <p className="text-ink-muted text-xs mt-3">We will clone the repository and analyze all .py files.</p>
+
+                {selectedRepo && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-ink-secondary mb-2">Branch</label>
+                      <div className="flex gap-2">
+                        <input
+                          value={selectedBranch || ''}
+                          onChange={e => {
+                            setSelectedBranch(e.target.value)
+                            setGithubBranch(e.target.value)
+                          }}
+                          className="input-field flex-1"
+                          placeholder={selectedRepo.default_branch || 'main'}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedBranch(selectedRepo.default_branch)
+                            setGithubBranch(selectedRepo.default_branch)
+                            fetchFolders(selectedRepo.full_name, selectedRepo.default_branch)
+                          }}
+                          className="px-3 py-2 bg-bg-surface border border-border rounded-lg text-sm text-ink-secondary hover:text-ink-primary transition-colors"
+                          title={`Use default: ${selectedRepo.default_branch}`}
+                        >
+                          Default
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-ink-secondary mb-2">Folder Path</label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowFolderDropdown(!showFolderDropdown)}
+                          className="w-full flex items-center justify-between input-field"
+                        >
+                          <span className="text-ink-primary flex items-center gap-2">
+                            <IconFolder className="w-4 h-4" />
+                            {selectedFolder || '/'}
+                          </span>
+                          <IconChevron className="w-4 h-4 text-ink-muted" />
+                        </button>
+                        {showFolderDropdown && (
+                          <div className="absolute z-50 w-full mt-1 bg-bg-surface border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                            <button
+                              onClick={() => handleFolderSelect({ path: '/' })}
+                              className={`w-full text-left px-4 py-2 hover:bg-bg-primary flex items-center gap-2 ${selectedFolder === '/' ? 'bg-accent/10' : ''}`}
+                            >
+                              <IconFolder className="w-4 h-4" /> / (root)
+                            </button>
+                            {loadingFolders ? (
+                              <div className="px-4 py-2 text-ink-muted text-sm">Loading folders...</div>
+                            ) : (
+                              folders.filter(f => f.type === 'tree').map(folder => (
+                                <button
+                                  key={folder.path}
+                                  onClick={() => handleFolderSelect(folder)}
+                                  className={`w-full text-left px-4 py-2 hover:bg-bg-primary flex items-center gap-2 ${selectedFolder === folder.path ? 'bg-accent/10' : ''}`}
+                                >
+                                  <IconFolder className="w-4 h-4 text-ink-muted" />
+                                  <span className="text-ink-primary text-sm">{folder.path}</span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
+              {!selectedRepo && (
+                <button onClick={fetchRepos} className="flex items-center gap-2 text-accent hover:text-accent/80 text-sm">
+                  <IconRefresh className="w-4 h-4" /> Refresh repositories
+                </button>
+              )}
             </div>
           )}
 

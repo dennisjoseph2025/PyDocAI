@@ -53,6 +53,8 @@ export const downloadMarkdown = (projectId) => api.get(`/exports/${projectId}/ma
 
 export const chatWithAI = (message, projectId) => api.post('/ai/chat/', { message, project_id: projectId })
 
-export const importFromGithub = (data) => api.post('/github/import/', data)
+export const getGithubRepos = () => api.get('/github/repos/')
+export const getGithubRepoFolders = (repo, branch) => api.get(`/github/repos/folders/?repo=${encodeURIComponent(repo)}${branch ? `&branch=${encodeURIComponent(branch)}` : ''}`)
+export const importFromGithub = (data) => api.post('/github/repos/import/', data)
 
 export default api
