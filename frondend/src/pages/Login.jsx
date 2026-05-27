@@ -112,6 +112,9 @@ export default function Login() {
               </button>
             </div>
             {errors.password && <p className="text-danger text-xs mt-1">{errors.password}</p>}
+            <div className="text-right mt-1">
+              <Link to="/forgot-password" className="text-accent hover:text-accent-hover text-xs font-medium">Forgot password?</Link>
+            </div>
           </div>
           {errors.general && <p className="text-danger text-sm text-center mb-4">{errors.general}</p>}
           <button id="login-submit" type="submit" disabled={loading} className="btn-accent w-full mt-2 flex items-center justify-center gap-2">

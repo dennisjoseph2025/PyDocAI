@@ -39,6 +39,7 @@ export default function Navbar() {
               >
                 Profile
               </Link>
+
             </>
           )}
         </div>

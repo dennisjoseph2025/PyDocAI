@@ -20,16 +20,20 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'apps.users',
     'apps.projects',
     'apps.parser',
     'apps.ai',
     'apps.github_integration',
     'apps.exports',
+    'apps.admin_dashboard',
+    'apps.feedback',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -39,6 +43,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
@@ -86,6 +91,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_FILTER_BACKENDS': [    
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
 }
 
 # ── JWT SETTINGS ────────────────────────────────────────────
@@ -109,3 +119,19 @@ GROQ_API_KEY_2 = config('GROQ_API_KEY_2', default=None)
 
 GITHUB_CLIENT_ID     = config('GITHUB_CLIENT_ID', default=None)
 GITHUB_CLIENT_SECRET = config('GITHUB_CLIENT_SECRET', default=None)
+GITHUB_API_TOKEN     = config('GITHUB_API_TOKEN', default=None)
+
+
+# ── EMAIL SETTINGS ──────────────────────────────────────────
+from datetime import timedelta
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@pydocai.com')
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour

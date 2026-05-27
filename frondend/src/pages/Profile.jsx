@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getProjects, deleteProject, updateProfile, changePassword } from '../api'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
 import DocCard from '../components/DocCard'
 import LoadingSpinner from '../components/LoadingSpinner'
+import FeedbackModal from '../components/FeedbackModal'
 import {
   IconUser, IconLock, IconKey, IconEye, IconEyeOff,
   IconCheck, IconX, IconEdit, IconFile, IconCalendar,
-  IconGithub, IconCode,
+  IconGithub, IconCode, IconChartIncreasing,
 } from '../components/Icons'
 
 const avatarColors = ['bg-accent', 'bg-success', 'bg-warning', 'bg-danger', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500']
@@ -303,10 +304,12 @@ function EditProfileModal({ user, onClose, onSaved }) {
 // ─── Main Profile Page ─────────────────────────────────────────────────────────
 export default function Profile() {
   const { user, addToast, updateUser } = useAuth()
+  const navigate = useNavigate()
   const [localUser, setLocalUser] = useState(user)
   const [docs, setDocs] = useState([])
   const [loading, setLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   // Keep localUser in sync with auth context
   useEffect(() => { setLocalUser(user) }, [user])
@@ -390,13 +393,42 @@ export default function Profile() {
                 )}
               </div>
             </div>
-            <button
-              id="edit-profile-btn"
-              onClick={() => setShowEditModal(true)}
-              className="btn-ghost self-start text-sm flex items-center gap-2 flex-shrink-0"
-            >
-              <IconEdit className="w-4 h-4" /> Edit Profile
-            </button>
+            <div className="flex gap-2 self-start flex-shrink-0">
+              {user?.role !== 'admin' && (
+                <>
+                  <button
+                    id="feedback-btn"
+                    onClick={() => setShowFeedback(true)}
+                    className="btn-ghost self-start text-sm flex items-center gap-2"
+                  >
+                    <IconEdit className="w-4 h-4" /> Feedback
+                  </button>
+                  <button
+                    id="my-feedback-btn"
+                    onClick={() => navigate('/my-feedback')}
+                    className="btn-ghost self-start text-sm flex items-center gap-2"
+                  >
+                    <IconCheck className="w-4 h-4" /> My Feedback
+                  </button>
+                </>
+              )}
+               {user?.role === 'admin' && (
+                 <button
+                   id="admin-dashboard-btn"
+                   onClick={() => navigate('/admin/stats')}
+                   className="btn-accent self-start text-sm flex items-center gap-2"
+                 >
+                   <IconChartIncreasing className="w-4 h-4" /> Admin Dashboard
+                 </button>
+               )}
+              <button
+                id="edit-profile-btn"
+                onClick={() => setShowEditModal(true)}
+                className="btn-ghost self-start text-sm flex items-center gap-2"
+              >
+                <IconEdit className="w-4 h-4" /> Edit Profile
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
@@ -450,6 +482,19 @@ export default function Profile() {
 
         </div>
       </div>
+
+      {/* Feedback Modal */}
+      {showFeedback && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowFeedback(false) }}
+        >
+          <div className="w-full max-w-lg">
+            <FeedbackModal onClose={() => setShowFeedback(false)} />
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {showEditModal && (

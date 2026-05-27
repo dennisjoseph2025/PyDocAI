@@ -13,7 +13,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'id', 'user', 'name', 'description', 'status', 'source_type',
-            'file', 'file_name', 'file_size', 'zip_file', 'github_url',
+            'file_name', 'file_size', 'github_url',
             'github_branch', 'parsed_data', 'generated_docs', 'readme_docs',
             'api_docs', 'project_info', 'custom_details', 'error_message', 'created_at', 'updated_at', 'files'
         ]
@@ -21,6 +21,13 @@ class ProjectSerializer(serializers.ModelSerializer):
                           'readme_docs', 'api_docs', 'project_info', 'error_message']
 
 class ProjectListSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+    file_count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'status', 'source_type', 'created_at']
+        fields = [
+            'id', 'name', 'description', 'status', 'source_type',
+            'created_at', 'updated_at', 'user_name', 'user_email', 'file_count',
+        ]

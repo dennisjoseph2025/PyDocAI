@@ -23,13 +23,11 @@ class Project(models.Model):
     status      = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     source_type = models.CharField(max_length=20, choices=SourceType.choices, default=SourceType.FILE)
 
-    # single file
-    file      = models.FileField(upload_to='uploads/%Y/%m/%d/', blank=True, null=True)
+    # single file metadata
     file_name = models.CharField(max_length=255, blank=True)
     file_size = models.PositiveIntegerField(blank=True, null=True)
 
-    # folder / zip
-    zip_file  = models.FileField(upload_to='zips/%Y/%m/%d/', blank=True, null=True)
+    # folder / zip (metadata only, never stored on disk)
 
     # github
     github_url    = models.URLField(blank=True, null=True)

@@ -30,7 +30,6 @@ def get_github_user(access_token: str) -> dict:
     profile.raise_for_status()
     data = profile.json()
 
-    # GitHub users can hide their email — fall back to the emails endpoint
     if not data.get('email'):
         emails_resp = requests.get(
             'https://api.github.com/user/emails',

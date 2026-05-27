@@ -23,4 +23,7 @@ dependencies = [
     "weasyprint>=68.1",
     "tomli>=2.0.1",
     "anthropic>=0.45.0",
+    "django-anymail>=15.0",
+    "django-filter>=25.2",
+    "whitenoise>=6.7.0",
 ]

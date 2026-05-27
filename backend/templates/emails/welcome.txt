@@ -1,0 +1,10 @@
+Hi {{ user.name }},
+
+Welcome to PyDocAI! Your account has been created successfully.
+
+You can now log in and start generating documentation for your Python projects.
+
+Get Started: {{ frontend_url }}/dashboard
+
+Thanks,
+The PyDocAI Team

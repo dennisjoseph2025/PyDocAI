@@ -9,4 +9,6 @@ urlpatterns = [
     path('api/ai/', include('apps.ai.urls')),
     path('api/github/', include('apps.github_integration.urls')),
     path('api/exports/', include('apps.exports.urls')),
+    path('api/admin-dashboard/', include('apps.admin_dashboard.urls')),
+    path('api/feedback/', include('apps.feedback.urls')),
 ]

@@ -57,4 +57,18 @@ export const getGithubRepos = () => api.get('/github/repos/')
 export const getGithubRepoFolders = (repo, branch) => api.get(`/github/repos/folders/?repo=${encodeURIComponent(repo)}${branch ? `&branch=${encodeURIComponent(branch)}` : ''}`)
 export const importFromGithub = (data) => api.post('/github/repos/import/', data)
 
+export const getPublicRepoInfo = (params) => api.get('/github/public-repo/info/', { params })
+export const getPublicRepoFolders = (params) => api.get('/github/public-repo/folders/', { params })
+export const importPublicRepo = (data) => api.post('/github/public-repo/import/', data)
+
+export const getAdminStats = () => api.get('/admin-dashboard/stats/')
+export const getAllProjects = () => api.get('/admin-dashboard/projects/')
+
+export const submitFeedback = (data) => api.post('/feedback/', data)
+export const getMyFeedback = () => api.get('/feedback/my/')
+export const getAllFeedback = (config) => api.get('/feedback/admin/', config)
+export const resolveFeedback = (id) => api.patch(`/feedback/admin/${id}/resolve/`)
+export const getFeedbackReplies = (feedbackId) => api.get(`/feedback/${feedbackId}/replies/`)
+export const createFeedbackReply = (feedbackId, message) => api.post(`/feedback/${feedbackId}/replies/`, { message })
+
 export default api

@@ -1,0 +1,122 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { adminListUsers } from '../api'
+import useAuth from '../hooks/useAuth'
+import AdminLayout from '../components/AdminLayout'
+import LoadingSpinner from '../components/LoadingSpinner'
+import { IconRefresh, IconCheck, IconX, IconUser, IconMail, IconFile, IconCalendar } from '../components/Icons'
+
+export default function AdminUsers() {
+  const { user, isLoading, addToast } = useAuth()
+  const navigate = useNavigate()
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (isLoading) return
+    if (!user || user.role !== 'admin') {
+      navigate('/', { replace: true })
+      return
+    }
+    fetchUsers()
+  }, [user, isLoading, navigate])
+
+  const fetchUsers = async () => {
+    setLoading(true)
+    try {
+      const res = await adminListUsers()
+      setUsers(res.data)
+    } catch (error) {
+      addToast('Failed to load users', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (isLoading) return <AdminLayout><div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" className="text-accent" /></div></AdminLayout>
+  if (!user || user.role !== 'admin') return null
+
+  return (
+    <AdminLayout>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-display font-bold text-ink-primary">Users</h1>
+          <p className="text-ink-secondary mt-1">{users.length} registered users</p>
+        </div>
+        <button onClick={fetchUsers} className="btn-ghost text-sm !px-4 !py-2 flex items-center gap-2">
+          <IconRefresh className="w-4 h-4" /> Refresh
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" className="text-accent" /></div>
+      ) : users.length === 0 ? (
+        <div className="glass-card p-12 text-center">
+          <p className="text-ink-muted text-lg">No users found</p>
+        </div>
+      ) : (
+        <div className="glass-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-bg-elevated">
+                  <th className="text-left text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">User</th>
+                  <th className="text-left text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">Email</th>
+                  <th className="text-center text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">Role</th>
+                  <th className="text-center text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">Verified</th>
+                  <th className="text-center text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">Docs</th>
+                  <th className="text-left text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id} className="border-t border-border hover:bg-bg-elevated/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white ${u.role === 'admin' ? 'bg-accent' : 'bg-bg-surface'}`}>
+                          <IconUser className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-medium text-ink-primary">{u.name || '—'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 text-sm text-ink-secondary">
+                        <IconMail className="w-3.5 h-3.5" />
+                        {u.email}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        u.role === 'admin' ? 'bg-accent/10 text-accent' : 'bg-bg-surface text-ink-secondary'
+                      }`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {u.is_verified
+                        ? <IconCheck className="w-4 h-4 text-success mx-auto" />
+                        : <IconX className="w-4 h-4 text-ink-muted mx-auto" />
+                      }
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="text-sm text-ink-primary flex items-center justify-center gap-1">
+                        <IconFile className="w-3.5 h-3.5 text-ink-muted" />
+                        {u.project_count ?? '—'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-ink-secondary flex items-center gap-1">
+                        <IconCalendar className="w-3.5 h-3.5" />
+                        {u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </AdminLayout>
+  )
+}

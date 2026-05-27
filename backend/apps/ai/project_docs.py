@@ -84,8 +84,9 @@ def extract_project_structure(project_path: str) -> Dict[str, Any]:
     
     try:
         scan_directory(root_path)
-    except:
-        pass
+    except Exception as e:
+        logger = __import__('logging').getLogger(__name__)
+        logger.warning(f"Error scanning project directory {project_path}: {e}")
     
     # Generate a full project tree string
     main_project_dir = None
@@ -179,8 +180,9 @@ def extract_dependencies(project_path: str) -> Dict[str, List[str]]:
                 )
                 if isinstance(dev_deps, dict):
                     deps['development'].extend(dev_deps.keys())
-            except:
-                pass
+            except Exception as e:
+                logger = __import__('logging').getLogger(__name__)
+                logger.warning(f"Error reading pyproject.toml at {pyproject_path}: {e}")
 
     def dedup(dep_list):
         """Keep the versioned entry if both bare name and versioned entry exist."""
@@ -224,8 +226,9 @@ def get_py_file_contents(project_path: str, max_files: int = 30) -> Dict[str, st
                             contents[rel_path] = content[:1000]
                         if len(contents) >= max_files:
                             return contents
-                except:
-                    pass
+                except Exception as e:
+                    logger = __import__('logging').getLogger(__name__)
+                    logger.warning(f"Error reading file {full_path}: {e}")
     
     return contents
 
@@ -294,7 +297,9 @@ def create_unified_prompt(summary: Dict[str, Any]) -> str:
         try:
             for filepath, file_content in summary['file_contents'].items():
                 parsed_data.append({'file': filepath, 'ast_nodes': len(ast.parse(file_content).body)})
-        except: pass
+        except Exception as e:
+            logger = __import__('logging').getLogger(__name__)
+            logger.warning(f"Error parsing AST for file contents: {e}")
         ast_data = json.dumps(parsed_data, indent=2) if parsed_data else "Not provided"
     else:
         ast_data = _format_ast_for_ai(parsed_data)
@@ -337,7 +342,7 @@ TASK: Generate three documentation assets as a SINGLE JSON object. Use ONLY the 
 
 REQUIRED JSON FORMAT:
 {{
-  "summary": "Detailed project summary in MARKDOWN. Sections: ## Project Overview (3-4 paragraphs), ## Architecture Analysis (patterns, component interactions), ## App-by-App Breakdown (for each app: role, models with fields/relationships, views/serializers logic, connections), ## Data Flow & Relationships (model relationships, request lifecycle), ## Dependency Analysis (how each dependency is used in THIS project), ## Technology Stack, ## Architecture Diagram (valid mermaid.js flowchart using 'A --> B' or 'A -->|label| B' syntax only).",
+  "summary": "Detailed project summary in MARKDOWN. Sections: ## Project Overview (3-4 paragraphs), ## Architecture Analysis (patterns, component interactions), ## App-by-App Breakdown (for each app: role, models with fields/relationships, views/serializers logic, connections), ## Data Flow & Relationships (model relationships, request lifecycle), ## Dependency Analysis (how each dependency is used in THIS project), ## Technology Stack, ## Architecture Diagram (valid mermaid.js flowchart — start with 'flowchart TD', use 'A --> B' or 'A -->|label| B' only).",
   "readme": "Comprehensive README.md in MARKDOWN. Sections: # Project Title, ## Introduction (3-4 paragraphs), ## Features (all features grouped by category with descriptions), ## Prerequisites, ## Dependencies (explain each major dependency), ## Installation (step-by-step), ## Configuration (env vars), ## Quick Start, ## Project Structure (EXACT file tree from above, do not alter), ## API Overview (endpoint table), ## Database Schema, ## Contributing.",
   "api_docs": "Detailed API documentation in MARKDOWN. Sections: # API Documentation, ## Overview, ## Authentication (JWT token flow), ## Error Handling, ## Endpoints (group by resource). For EACH endpoint found in urls.py: ### [METHOD] /path/ with **Description** (2-3 paragraphs), **Request Headers**, **Path Parameters**, **Query Parameters**, **Request Body** (JSON structure from serializers), **Response** (JSON structure), **Status Codes**. Document EVERY route. Do NOT omit any."
 }}
@@ -345,7 +350,7 @@ REQUIRED JSON FORMAT:
 RULES:
 1. Return ONLY valid JSON. No text before or after.
 2. Escape newlines as \\n and quotes as \" inside strings.
-3. Mermaid: use 'A --> B' or 'A -->|label| B' only. No '-->|text|>'.
+3. Mermaid: ALWAYS start the diagram with 'flowchart TD' on its own line. Use 'A --> B' or 'A -->|label| B' only. No '-->|text|>'.
 4. Be thorough and detailed in every section.
 """
 
@@ -848,6 +853,22 @@ def _sanitize_markdown(text: str) -> str:
     # Ensure mermaid code blocks are properly formatted
     text = re.sub(r'```mermaid\s*\n', '\n```mermaid\n', text)
     text = re.sub(r'\n\s*graph\s+(?:LR|RL|BT|TD)?', '\ngraph TD', text)
+
+    # Inside mermaid blocks, ensure the diagram has a valid type prefix
+    def _ensure_mermaid_prefix(match):
+        block = match.group(0)
+        lines = block.split('\n')
+        # Find first meaningful line after ```mermaid
+        for i in range(1, len(lines)):
+            line = lines[i].strip()
+            if line and not line.startswith('```'):
+                prefix_match = re.match(r'^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|gantt|pie|erDiagram|journey|gitGraph)\s', line, re.IGNORECASE)
+                if not prefix_match and re.search(r'-->|\.->|==>|~~>', line):
+                    lines.insert(i, 'graph TD')
+                break
+        return '\n'.join(lines)
+
+    text = re.sub(r'```mermaid\n.*?```', _ensure_mermaid_prefix, text, flags=re.DOTALL)
     
     # Ensure blank line before headings
     text = re.sub(r'([^\n])\n(#{1,6} )', r'\1\n\n\2', text)
@@ -885,14 +906,54 @@ def _call_ai_unified(prompt: str) -> Dict[str, str]:
 
     def sanitize_ai_json(raw: str) -> dict:
         """Robustly sanitize and parse AI-generated JSON."""
+        # Remove null bytes and control chars except \n, \r, \t
         raw = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', raw)
+
+        # Fix unescaped newlines/tabs inside JSON strings
+        # Walk through the string tracking whether we're inside quotes
+        def fix_string_escapes(s):
+            result = []
+            in_string = False
+            escaped = False
+            for i, ch in enumerate(s):
+                if escaped:
+                    result.append(ch)
+                    escaped = False
+                    continue
+                if ch == '\\' and in_string:
+                    result.append(ch)
+                    escaped = True
+                    continue
+                if ch == '"' and not escaped:
+                    in_string = not in_string
+                    result.append(ch)
+                    continue
+                if in_string and ch == '\n':
+                    result.append('\\n')
+                    continue
+                if in_string and ch == '\r':
+                    result.append('\\r')
+                    continue
+                if in_string and ch == '\t':
+                    result.append('\\t')
+                    continue
+                result.append(ch)
+            return ''.join(result)
+
+        raw = fix_string_escapes(raw)
+
+        # Fix trailing commas before } or ]
+        raw = re.sub(r',\s*([}\]])', r'\1', raw)
+
+        # Fix unescaped backslashes
         valid_escapes = set('"\\/bfnrtu')
         def fix_escape(m):
             char = m.group(1)
             if char in valid_escapes:
                 return m.group(0)
-            return char
+            return '\\' + char
         raw = re.sub(r'\\(.)', fix_escape, raw)
+
         parsed = json.loads(raw)
         for key in parsed:
             if isinstance(parsed[key], str):

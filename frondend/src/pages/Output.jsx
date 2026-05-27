@@ -30,6 +30,7 @@ mermaid.initialize({
 function sanitizeMermaid(chart) {
   if (!chart) return chart
   let sanitized = chart
+
   // Fix '-->|text|>' → '-->|text|' (extra trailing bracket)
   sanitized = sanitized.replace(/-->\|([^|]*)\|>/g, '-->|$1|')
   // Fix '-->>' → '-->'
@@ -38,6 +39,22 @@ function sanitizeMermaid(chart) {
   sanitized = sanitized.replace(/-\.->\|([^|]*)\|>/g, '-.->|$1|')
   // Fix '==>|text|>' → '==>|text|'
   sanitized = sanitized.replace(/==>\|([^|]*)\|>/g, '==>|$1|')
+
+  // Ensure diagram starts with a valid mermaid type declaration
+  // Valid starters: graph, flowchart, sequenceDiagram, classDiagram, etc.
+  const firstLine = sanitized.trimStart().split('\n')[0].trim()
+  const validTypes = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|gantt|pie|erDiagram|journey|gitGraph|quadrantChart|requirementDiagram)/i
+  if (!validTypes.test(firstLine)) {
+    // Prepend graph TD if the content looks like a flowchart (has -->, -.-, ==> etc.)
+    if (/-->|-\.->|==>|~~>/.test(sanitized)) {
+      sanitized = 'graph TD\n' + sanitized
+    }
+  }
+
+  // Force graph TD for any graph statement missing direction
+  sanitized = sanitized.replace(/^graph\s*$/m, 'graph TD')
+  sanitized = sanitized.replace(/^graph\s+(?:LR|RL|BT)\s*$/m, (m) => m.trim())
+
   return sanitized
 }
 

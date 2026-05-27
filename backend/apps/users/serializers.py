@@ -50,6 +50,13 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
+class AdminUserSerializer(UserSerializer):
+    project_count = serializers.IntegerField(read_only=True)
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ['project_count']
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     new_password = serializers.CharField(write_only=True, min_length=8)
@@ -80,3 +87,14 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 class GithubAuthSerializer(serializers.Serializer):
     code = serializers.CharField()
+    
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    token = serializers.UUIDField()
+    new_password = serializers.CharField(write_only=True, min_length=8)
+        
