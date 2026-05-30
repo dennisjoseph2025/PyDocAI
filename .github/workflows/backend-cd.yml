@@ -6,6 +6,7 @@ on:
     paths:
       - "backend/**"
       - ".github/workflows/backend-cd.yml"
+      - "docker-compose.yml"
 
 env:
   REGISTRY: ghcr.io
@@ -50,3 +51,23 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/PyDocAI
+            git pull origin main
+            docker compose pull backend
+            docker compose up -d --build
+            docker image prune -f

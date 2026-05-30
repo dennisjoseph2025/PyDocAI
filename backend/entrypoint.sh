@@ -1,13 +1,5 @@
-#!/bin/sh
+#!/bin/bash
 set -e
-
-echo "Waiting for postgres..."
-while ! nc -z $DB_HOST $DB_PORT; do
-  sleep 0.1
-done
-echo "PostgreSQL started"
-
-python manage.py migrate
-python manage.py collectstatic --noinput
-
-exec "$@"
+uv run python manage.py migrate --noinput
+uv run python manage.py collectstatic --noinput
+exec uv run gunicorn config.wsgi:application --bind 0.0.0.0:8000 --worker-class gevent --workers 4
