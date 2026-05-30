@@ -213,19 +213,19 @@ def generate_folder_docs(
 ) -> dict:
     """
     Generate comprehensive documentation for a whole project folder.
-    
+
     This function is called when a user uploads a folder/project instead of a single file.
     It generates:
     - README.md for the project
     - Project summary/documentation
     - Overall project information
-    
+
     Args:
         folder_path: Path to the project folder
         project_name: Optional name for the project
         user_description: Optional user-provided description of the project
         custom_info: Optional dictionary of user-provided project details
-        
+
     Returns:
         dict with keys:
         - 'readme': README.md content

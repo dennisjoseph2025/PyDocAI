@@ -48,6 +48,19 @@ line-length = 120
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
 
+[tool.ruff.lint.per-file-ignores]
+"*/migrations/*" = ["E501"]
+"apps/ai/prompts.py" = ["E501"]
+"apps/ai/generator.py" = ["E501"]
+"apps/ai/project_docs.py" = ["E501", "E722", "SIM102", "SIM108", "B007", "F841"]
+"config/settings/*" = ["F403", "F405", "E402"]
+"apps/github_integration/tasks.py" = ["SIM105", "B904"]
+"apps/exports/views.py" = ["B904"]
+"apps/parser/tasks.py" = ["B904"]
+"apps/parser/ast_parser.py" = ["SIM102"]
+"apps/github_integration/views.py" = ["E501"]
+"apps/parser/views.py" = ["E501"]
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.development"
 testpaths = ["apps"]

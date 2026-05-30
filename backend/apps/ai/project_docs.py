@@ -199,7 +199,7 @@ def extract_dependencies(project_path: str) -> dict[str, list[str]]:
 
 def get_py_file_contents(project_path: str, max_files: int = 30) -> dict[str, str]:
     """Extract ONLY urls.py and views.py raw source code.
-    
+
     All other files (models, serializers, admin, apps, tests, management
     commands) are fully captured by structured AST data. Sending both AST
     + raw source duplicates information and bloats the prompt. Raw source
@@ -1018,7 +1018,6 @@ def generate_project_docs(project_path: str, project_name: str = None, user_desc
             'ai_available': False
         }
 
-    ai_succeeded = False
     try:
         start_time = time.time()
         unified_docs = _call_ai_unified(create_unified_prompt(project_info))

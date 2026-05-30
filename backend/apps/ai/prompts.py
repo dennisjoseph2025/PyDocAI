@@ -283,7 +283,7 @@ result = {name}({args_examples})
 
             methods_detail += f"""
 #### `{mname}({margs}) -> {mret}`
-**Line:** {mline} | **Visibility:** {visibility} | **Connections:** {', '.join(mconns) if mconns else 'none'}
+**Line:** {mline} | **Visibility:** {visibility} | **Connections:** {', '.join(m.get('connections', [])) or 'none'}
 
 ##### Purpose
 (3-5 sentences explaining what this method does, when to call it, why it exists)
@@ -316,7 +316,7 @@ result = {name}({args_examples})
 (List ALL exceptions this method can raise and when)
 
 ##### Relationships
-- **Calls:** {', '.join(mconns) if mconns else 'none'}
+- **Calls:** {', '.join(m.get('connections', [])) or 'none'}
 - **Called By:** (infer from other functions/classes)
 - **Uses:** imports or external dependencies
 
