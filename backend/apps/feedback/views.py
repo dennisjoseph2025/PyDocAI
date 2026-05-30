@@ -1,9 +1,10 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from .models import Feedback, FeedbackReply
-from .serializers import FeedbackSerializer, FeedbackReplySerializer
+from .serializers import FeedbackReplySerializer, FeedbackSerializer
 from .tasks import send_feedback_confirmation_task, send_feedback_reply_task
 
 

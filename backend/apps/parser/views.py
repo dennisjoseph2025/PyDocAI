@@ -2,13 +2,14 @@ import base64
 import io
 import json
 import zipfile
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apps.parser.tasks import parse_and_generate_docs_task, parse_folder_task
 from apps.parser.validators import should_exclude
-from apps.parser.tasks import parse_folder_task, parse_and_generate_docs_task
 from apps.projects.models import Project
 
 
@@ -19,14 +20,14 @@ class AnalyseFolderView(APIView):
         zip_file = request.FILES.get('folder')
         name = request.data.get('name', 'Untitled Project')
         description = request.data.get('description', '')
-        
+
         # Optional user-provided project details for documentation
         user_description = request.data.get('user_description', None)
         # Parse custom_info (Mandatory)
         custom_info = request.data.get('custom_info', None)
         if not custom_info:
             return Response({'error': 'additional project details (custom_info) are mandatory for folder uploads'}, status=400)
-            
+
         if isinstance(custom_info, str):
             try:
                 # Try parsing as JSON first
@@ -65,8 +66,8 @@ class AnalyseFolderView(APIView):
             zip_base64 = base64.b64encode(zip_content).decode('utf-8')
 
             parse_folder_task.delay(
-                project.id, 
-                py_files, 
+                project.id,
+                py_files,
                 zip_base64,
                 user_description=user_description,
                 custom_info=custom_info

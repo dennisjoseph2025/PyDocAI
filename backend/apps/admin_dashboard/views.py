@@ -1,18 +1,16 @@
-from django.contrib.admin.views.decorators import staff_member_required
-from django.utils.decorators import method_decorator
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Count, Q
 
-from apps.users.models import User
-from apps.projects.models import Project
+from django.db.models import Count
+from django.utils import timezone
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAdminUser
-from apps.users.serializers import UserSerializer
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apps.projects.models import Project
 from apps.projects.serializers import ProjectListSerializer, ProjectSerializer
+from apps.users.models import User
+from apps.users.serializers import UserSerializer
 
 
 class AdminStatsView(APIView):
@@ -57,15 +55,15 @@ class AdminStatsView(APIView):
             ),
         }
         return Response(stats)
-    
+
 
 class AdminUserListView(ListAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = UserSerializer
-    queryset = User.objects.all().order_by('-created_at') 
+    queryset = User.objects.all().order_by('-created_at')
     filterset_fields = ['is_active', 'is_verified', 'role']
-    search_fields = ['email', 'username', 'name']         
-    ordering_fields = ['created_at', 'email', 'username']  
+    search_fields = ['email', 'username', 'name']
+    ordering_fields = ['created_at', 'email', 'username']
 
 class AdminUserDetailView(RetrieveAPIView):
     permission_classes = [IsAdminUser]
@@ -114,5 +112,5 @@ class AdminProjectListView(ListAPIView):
 class AdminProjectDetailView(RetrieveAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = ProjectSerializer
-    queryset = Project.objects.select_related('user').all()  
+    queryset = Project.objects.select_related('user').all()
     lookup_field = 'pk'

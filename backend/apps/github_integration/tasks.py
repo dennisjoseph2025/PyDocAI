@@ -1,12 +1,13 @@
-from celery import shared_task
 import base64
 import io
-import zipfile
 import logging
+import zipfile
 
-from apps.projects.models import Project
+from celery import shared_task
+
 from apps.parser.tasks import parse_folder_task
 from apps.parser.validators import should_exclude
+from apps.projects.models import Project
 
 logger = logging.getLogger(__name__)
 

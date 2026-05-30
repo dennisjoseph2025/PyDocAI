@@ -1,6 +1,6 @@
-from github import Github, GithubException, RateLimitExceededException
-from django.conf import settings
 import requests
+from django.conf import settings
+from github import Github, GithubException
 
 
 def _get_github_client(github_token=None):
@@ -19,7 +19,7 @@ def _fetch_public_repo_api(full_name: str) -> dict:
     headers = {'Accept': 'application/vnd.github+json'}
     if api_token and api_token.strip():
         headers['Authorization'] = f'token {api_token}'
-    
+
     resp = requests.get(
         f'https://api.github.com/repos/{full_name}',
         headers=headers,
@@ -39,7 +39,7 @@ def _fetch_public_tree_api(full_name: str, branch: str) -> dict:
     headers = {'Accept': 'application/vnd.github+json'}
     if api_token and api_token.strip():
         headers['Authorization'] = f'token {api_token}'
-    
+
     resp = requests.get(
         f'https://api.github.com/repos/{full_name}/git/trees/{branch}?recursive=1',
         headers=headers,
@@ -101,7 +101,7 @@ def get_repo_tree(github_token: str, full_name: str, branch: str = None) -> list
     for item in tree.tree:
         items.append({
             'path': item.path,
-            'type': item.type,  
+            'type': item.type,
             'size': item.size,
         })
     return items
@@ -112,7 +112,7 @@ def get_public_repo_tree(full_name: str, branch: str = None, github_token=None) 
     # First get repo to find default branch if not provided
     repo_data = _fetch_public_repo_api(full_name)
     branch = branch or repo_data.get('default_branch') or 'main'
-    
+
     tree_data = _fetch_public_tree_api(full_name, branch)
     items = []
     for item in tree_data.get('tree', []):
@@ -131,7 +131,7 @@ def get_repo_folders(github_token: str, full_name: str, branch: str = None) -> l
         item for item in tree
         if item['type'] == 'tree'
     ]
-    
+
     folders.insert(0, {'path': '/', 'type': 'tree', 'size': 0})
     return folders
 
@@ -182,10 +182,10 @@ def _fetch_contents_api(full_name: str, path: str, branch: str) -> list:
     headers = {'Accept': 'application/vnd.github+json'}
     if api_token and api_token.strip():
         headers['Authorization'] = f'token {api_token}'
-    
+
     url = f'https://api.github.com/repos/{full_name}/contents/{path}'
     params = {'ref': branch} if branch else {}
-    
+
     resp = requests.get(url, headers=headers, params=params, timeout=10)
     if resp.status_code == 404:
         return []
@@ -199,14 +199,14 @@ def _fetch_file_content_api(full_name: str, path: str, branch: str) -> str | Non
     headers = {'Accept': 'application/vnd.github+json'}
     if api_token and api_token.strip():
         headers['Authorization'] = f'token {api_token}'
-    
+
     url = f'https://api.github.com/repos/{full_name}/contents/{path}'
     params = {'ref': branch} if branch else {}
-    
+
     resp = requests.get(url, headers=headers, params=params, timeout=10)
     if resp.status_code != 200:
         return None
-    
+
     import base64
     data = resp.json()
     return base64.b64decode(data['content']).decode('utf-8', errors='ignore')

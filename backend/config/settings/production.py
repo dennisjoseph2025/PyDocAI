@@ -1,5 +1,6 @@
-from config.settings.base import *
 from decouple import config
+
+from config.settings.base import *
 
 DEBUG = False
 ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
@@ -12,7 +13,7 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT', default='5432'),
-        'CONN_MAX_AGE': 300,   
+        'CONN_MAX_AGE': 300,
     }
 }
 
@@ -44,7 +45,7 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": config('CELERY_BROKER_URL'),  
-        "TIMEOUT": 300,  
+        "LOCATION": config('CELERY_BROKER_URL'),
+        "TIMEOUT": 300,
     }
 }

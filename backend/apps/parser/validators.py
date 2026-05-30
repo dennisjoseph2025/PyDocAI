@@ -14,7 +14,7 @@ def validate_python_code(source_code: str) -> tuple:
         return True, None
     except SyntaxError as e:
         return False, f"SyntaxError on line {e.lineno}: {e.msg}"
-    
+
 
 EXCLUDED_DIRS = {
     'venv', '.venv', 'env', '.env',
@@ -25,8 +25,8 @@ EXCLUDED_DIRS = {
     '.git', '.github', '.gitignore',
     '.vscode', '.idea',
     'migrations',
-    'media',        
-    'staticfiles',  
+    'media',
+    'staticfiles',
 }
 
 def should_exclude(file_path: str) -> bool:

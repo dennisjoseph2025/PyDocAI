@@ -1,5 +1,13 @@
 from django.urls import path
-from .views import UserReposView, RepoFoldersView, ImportRepoView, PublicRepoInfoView, PublicRepoFoldersView, ImportPublicRepoView
+
+from .views import (
+    ImportPublicRepoView,
+    ImportRepoView,
+    PublicRepoFoldersView,
+    PublicRepoInfoView,
+    RepoFoldersView,
+    UserReposView,
+)
 
 urlpatterns = [
     path('repos/',              UserReposView.as_view(),        name='github-repos'),

@@ -1,7 +1,9 @@
 import uuid
+
 from django.db import models
-from apps.users.models import User
+
 from apps.projects.models import Project
+from apps.users.models import User
 
 
 class Feedback(models.Model):

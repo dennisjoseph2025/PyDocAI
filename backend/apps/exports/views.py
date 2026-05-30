@@ -1,6 +1,6 @@
-from django.http import HttpResponse, Http404
+from django.http import Http404, HttpResponse
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+
 from apps.exports.generators import export_project_as_markdown
 
 
@@ -25,8 +25,9 @@ class ExportFolderDocsView(APIView):
     permission_classes = []  # Disabled for testing
 
     def get(self, request, project_id):
-        from apps.projects.models import Project
         import uuid
+
+        from apps.projects.models import Project
 
         try:
             project_id_uuid = uuid.UUID(str(project_id))
@@ -35,7 +36,7 @@ class ExportFolderDocsView(APIView):
             raise Http404("Project not found")
 
         doc_type = request.query_params.get('type', 'all')
-        
+
         if doc_type == 'readme':
             if not project.readme_docs:
                 raise Http404("README not available yet - folder may still be processing")
@@ -54,7 +55,7 @@ class ExportFolderDocsView(APIView):
         else:
             if not project.readme_docs and not project.generated_docs and not project.api_docs:
                 raise Http404("Project documentation not available - please ensure folder upload was completed")
-            
+
             parts = []
             if project.readme_docs:
                 parts.append(project.readme_docs)
@@ -62,7 +63,7 @@ class ExportFolderDocsView(APIView):
                 parts.append(f"# Project Documentation\n\n{project.generated_docs}")
             if project.api_docs:
                 parts.append(f"# API Documentation\n\n{project.api_docs}")
-            
+
             content = "\n\n---\n\n".join(parts)
             filename = "project_docs.md"
 

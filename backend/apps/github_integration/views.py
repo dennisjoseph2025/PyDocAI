@@ -1,14 +1,16 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 import re
-from github import GithubException
 
-from .fetcher import get_user_repos, get_repo_folders, get_public_repo, get_public_repo_folders
+from github import GithubException
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apps.projects.models import Project
+
+from .fetcher import get_public_repo, get_public_repo_folders, get_repo_folders, get_user_repos
 from .serializers import RepoImportSerializer
 from .tasks import import_github_repo_task, import_public_repo_task
-from apps.projects.models import Project
 
 
 def parse_github_url(url: str) -> str | None:

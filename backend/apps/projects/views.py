@@ -1,9 +1,10 @@
-from rest_framework import generics, permissions, status
-from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.db.models import Count
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+
 from .models import Project
-from .serializers import ProjectSerializer, ProjectListSerializer
+from .serializers import ProjectListSerializer, ProjectSerializer
 
 User = get_user_model()
 

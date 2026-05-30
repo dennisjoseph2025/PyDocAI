@@ -1,5 +1,6 @@
-from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
+from rest_framework.test import APITestCase
+
 from apps.projects.models import Project
 
 User = get_user_model()
@@ -21,7 +22,7 @@ class ExportTests(APITestCase):
         response = self.client.get(f'/api/exports/{self.project.id}/folder/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'text/markdown')
-        
+
         content = response.content.decode('utf-8')
         self.assertIn('# Mock README', content)
         self.assertIn('## Project Summary', content)

@@ -1,6 +1,7 @@
-from rest_framework.test import APITestCase
-from rest_framework import status
 from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.test import APITestCase
+
 from apps.projects.models import Project
 
 User = get_user_model()
@@ -9,7 +10,7 @@ class ProjectTests(APITestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(email='user1@example.com', name='User1', password='pwd')
         self.user2 = User.objects.create_user(email='user2@example.com', name='User2', password='pwd')
-        
+
         self.project1 = Project.objects.create(
             user=self.user1,
             name='Project 1',

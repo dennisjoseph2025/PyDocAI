@@ -1,7 +1,9 @@
 import re
+
 from django.conf import settings
-from .prompts import get_file_docs_prompt, get_item_docs_prompt, _build_structure_tree
+
 from .project_docs import generate_project_docs
+from .prompts import _build_structure_tree, get_item_docs_prompt
 
 
 def _sanitize_markdown(text: str) -> str:
@@ -135,7 +137,6 @@ Any additional observations about the module.
     for item in ordered_items:
         typ = item['type']
         data = item['data']
-        line = item['line']
 
         if typ == 'import':
             continue
@@ -154,8 +155,6 @@ Any additional observations about the module.
 
 def _mock_docs(parsed: dict, file_path: str) -> str:
     """Returns mock docs for development when no API key available."""
-    functions = parsed.get('functions', [])
-    classes   = parsed.get('classes', [])
     imports   = parsed.get('imports', [])
     ordered   = parsed.get('ordered_items', [])
 

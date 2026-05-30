@@ -1,10 +1,12 @@
-from rest_framework.test import APITestCase
-from rest_framework import status
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from unittest.mock import patch
-from apps.parser.validators import validate_python_code, should_exclude
+from rest_framework import status
+from rest_framework.test import APITestCase
+
 from apps.parser.ast_parser import parse_python_file
+from apps.parser.validators import should_exclude, validate_python_code
 
 User = get_user_model()
 
@@ -44,7 +46,7 @@ class ParserAPITests(APITestCase):
         """Test uploading a single python file triggers the correct celery task."""
         file_content = b"def my_func(): pass"
         test_file = SimpleUploadedFile("test.py", file_content, content_type="text/x-python")
-        
+
         response = self.client.post('/api/parser/file/', {
             'file': test_file,
             'name': 'Test Script'

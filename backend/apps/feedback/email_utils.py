@@ -1,7 +1,8 @@
+import logging
+
+from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from django.conf import settings
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ def send_feedback_reply_email(reply):
     """Send notification to feedback owner when someone replies."""
     feedback = reply.feedback
     user = feedback.user
-    subject = f'New reply on your feedback — PyDocAI'
+    subject = 'New reply on your feedback — PyDocAI'
     message = render_to_string('emails/feedback_reply.txt', {
         'user': user,
         'feedback': feedback,

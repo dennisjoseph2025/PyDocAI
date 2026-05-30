@@ -1,5 +1,7 @@
 from rest_framework import serializers
+
 from .models import Project, ProjectFile
+
 
 class ProjectFileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,7 +10,7 @@ class ProjectFileSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     files = ProjectFileSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = Project
         fields = [
@@ -17,7 +19,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             'github_branch', 'parsed_data', 'generated_docs', 'readme_docs',
             'api_docs', 'project_info', 'custom_details', 'error_message', 'created_at', 'updated_at', 'files'
         ]
-        read_only_fields = ['user', 'status', 'parsed_data', 'generated_docs', 
+        read_only_fields = ['user', 'status', 'parsed_data', 'generated_docs',
                           'readme_docs', 'api_docs', 'project_info', 'error_message']
 
 class ProjectListSerializer(serializers.ModelSerializer):

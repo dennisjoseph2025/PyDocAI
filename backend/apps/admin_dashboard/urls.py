@@ -1,7 +1,11 @@
 from django.urls import path
+
 from .views import (
-    AdminStatsView, AdminProjectDetailView, AdminUserDetailView,
-    AdminProjectListView, AdminUserListView,
+    AdminProjectDetailView,
+    AdminProjectListView,
+    AdminStatsView,
+    AdminUserDetailView,
+    AdminUserListView,
 )
 
 urlpatterns = [

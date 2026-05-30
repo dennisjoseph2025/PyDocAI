@@ -1,7 +1,8 @@
-from django.test import TestCase
-from apps.ai.generator import _sanitize_markdown
-from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+from rest_framework.test import APITestCase
+
+from apps.ai.generator import _sanitize_markdown
 
 User = get_user_model()
 

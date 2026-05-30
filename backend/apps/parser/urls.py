@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import AnalyseSingleFileView, AnalyseFolderView
+
+from .views import AnalyseFolderView, AnalyseSingleFileView
 
 urlpatterns = [
     path('file/',   AnalyseSingleFileView.as_view(), name='analyse_file'),

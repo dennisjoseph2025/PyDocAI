@@ -1,13 +1,14 @@
-from celery import shared_task
 import logging
+
+from celery import shared_task
 
 logger = logging.getLogger(__name__)
 
 
 @shared_task
 def send_feedback_confirmation_task(feedback_id):
-    from .models import Feedback
     from .email_utils import send_feedback_confirmation_email
+    from .models import Feedback
     try:
         fb = Feedback.objects.select_related('user').get(id=feedback_id)
         send_feedback_confirmation_email(fb)
@@ -17,8 +18,8 @@ def send_feedback_confirmation_task(feedback_id):
 
 @shared_task
 def send_feedback_reply_task(reply_id):
-    from .models import FeedbackReply
     from .email_utils import send_feedback_reply_email
+    from .models import FeedbackReply
     try:
         reply = FeedbackReply.objects.select_related('user', 'feedback__user').get(id=reply_id)
         send_feedback_reply_email(reply)

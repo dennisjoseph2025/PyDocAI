@@ -1,15 +1,22 @@
-from rest_framework import status, generics
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError
-from .github import exchange_code_for_token, get_github_user
-from .models import User,PasswordResetToken
-from .serializers import RegisterSerializer,LoginSerializer,UserSerializer,ChangePasswordSerializer, GithubAuthSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 import requests
-from django.conf import settings
-from .email_utils import send_welcome_email, send_password_reset_email
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from .github import exchange_code_for_token, get_github_user
+from .models import PasswordResetToken, User
+from .serializers import (
+    ChangePasswordSerializer,
+    GithubAuthSerializer,
+    LoginSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    RegisterSerializer,
+    UserSerializer,
+)
 
 
 def get_tokens(user):
@@ -28,6 +35,8 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user   = serializer.save()
             tokens = get_tokens(user)
+            from .tasks import send_welcome_email_task
+            send_welcome_email_task.delay(user.id)
             return Response({
                 'user':   UserSerializer(user).data,
                 'tokens': tokens,
@@ -107,8 +116,8 @@ class UserListView(generics.ListAPIView):
             from django.db.models import Count
             return User.objects.annotate(project_count=Count('projects')).all()
         return User.objects.none()
-    
-    
+
+
 class GithubAuthView(APIView):
     permission_classes = [AllowAny]
 
@@ -173,25 +182,7 @@ class GithubAuthView(APIView):
                 'created': created,
             },
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
-        )    
-        
-        
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user   = serializer.save()
-            tokens = get_tokens(user)
-            # Send welcome email asynchronously via Celery
-            from .tasks import send_welcome_email_task
-            send_welcome_email_task.delay(user.id)
-            return Response({
-                'user':   UserSerializer(user).data,
-                'tokens': tokens,
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        )
 
 
 class PasswordResetRequestView(APIView):
@@ -232,4 +223,4 @@ class PasswordResetConfirmView(APIView):
         user.save()
         token.used = True
         token.save()
-        return Response({'detail': 'Password reset successfully.'})        
+        return Response({'detail': 'Password reset successfully.'})

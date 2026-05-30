@@ -1,5 +1,5 @@
 import ast
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 
 def parse_python_file(source_code: str) -> dict:
@@ -65,7 +65,7 @@ def parse_python_file(source_code: str) -> dict:
     return result
 
 
-def _extract_import(node) -> Dict[str, Any]:
+def _extract_import(node) -> dict[str, Any]:
     """Extract import information with line number."""
     if isinstance(node, ast.Import):
         names = [alias.name for alias in node.names]
@@ -88,7 +88,7 @@ def _extract_import(node) -> Dict[str, Any]:
         }
 
 
-def _extract_function(node, available_names: set) -> Dict[str, Any]:
+def _extract_function(node, available_names: set) -> dict[str, Any]:
     """Extract function definition with connections."""
     connections = _find_connections(node, available_names)
     return {
@@ -103,7 +103,7 @@ def _extract_function(node, available_names: set) -> Dict[str, Any]:
     }
 
 
-def _extract_class(node, available_names: set) -> Dict[str, Any]:
+def _extract_class(node, available_names: set) -> dict[str, Any]:
     """Extract class definition with methods in order and connections."""
     methods = []
     class_connections = _find_connections(node, available_names)
@@ -133,7 +133,7 @@ def _extract_class(node, available_names: set) -> Dict[str, Any]:
     }
 
 
-def _find_connections(node, available_names: set) -> List[str]:
+def _find_connections(node, available_names: set) -> list[str]:
     """Find references to other top-level names within a node's body."""
     connections = set()
     for child in ast.walk(node):
@@ -159,7 +159,7 @@ def extract_args(func_node) -> list:
     return args
 
 
-def extract_return_type(func_node) -> Optional[str]:
+def extract_return_type(func_node) -> str | None:
     if func_node.returns:
         return ast.unparse(func_node.returns)
     return None

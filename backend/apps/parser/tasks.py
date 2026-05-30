@@ -1,19 +1,15 @@
 import base64
 import io
-import zipfile
-import time
 import logging
-import tempfile
 import shutil
-import os
-from pathlib import Path
+import tempfile
+import zipfile
 
 from celery import shared_task
-from celery.exceptions import MaxRetriesExceededError
 
-from apps.parser.ast_parser import parse_python_file
-from apps.parser.validators import validate_python_code, should_exclude
 from apps.ai.generator import generate_file_docs, generate_folder_docs
+from apps.parser.ast_parser import parse_python_file
+from apps.parser.validators import should_exclude, validate_python_code
 from apps.projects.models import Project, ProjectFile
 
 logger = logging.getLogger(__name__)
@@ -33,10 +29,10 @@ def parse_folder_task(self, project_id, py_files, zip_base64=None, user_descript
 
         if user_description:
             project.description = user_description
-        
+
         if custom_info:
             project.custom_details = custom_info
-            
+
         project.save()
 
         if not zip_base64:
@@ -56,7 +52,8 @@ def parse_folder_task(self, project_id, py_files, zip_base64=None, user_descript
             try:
                 content = zf.read(file_path).decode('utf-8', errors='ignore')
                 is_valid, _ = validate_python_code(content)
-                if not is_valid: continue
+                if not is_valid:
+                    continue
 
                 parsed = parse_python_file(content)
                 ProjectFile.objects.create(
@@ -66,7 +63,7 @@ def parse_folder_task(self, project_id, py_files, zip_base64=None, user_descript
                     file_size=len(content),
                     content=content,
                     parsed_data=parsed,
-                    generated_docs='', 
+                    generated_docs='',
                 )
                 results.append({'file_path': file_path, 'parsed': parsed})
             except Exception as e:
@@ -76,7 +73,7 @@ def parse_folder_task(self, project_id, py_files, zip_base64=None, user_descript
         temp_dir = tempfile.mkdtemp()
         try:
             zf.extractall(temp_dir)
-            
+
             project_docs = generate_folder_docs(
                 folder_path=temp_dir,
                 project_name=project.name,
@@ -84,14 +81,14 @@ def parse_folder_task(self, project_id, py_files, zip_base64=None, user_descript
                 custom_info=custom_info,
                 parsed_ast_data=results
             )
-            
+
             project.generated_docs = project_docs.get('summary', '')
             project.readme_docs = project_docs.get('readme', '')
             project.api_docs = project_docs.get('api_docs', '')
             project.project_info = project_docs.get('project_info', {})
             project.status = Project.Status.DONE
             project.save()
-            
+
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 

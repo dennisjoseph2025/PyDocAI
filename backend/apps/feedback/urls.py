@@ -1,8 +1,11 @@
 from django.urls import path
+
 from .views import (
-    FeedbackCreateView, FeedbackListView,
+    AdminFeedbackResolveView,
     AdminFeedbackView,
-    AdminFeedbackResolveView, FeedbackReplyListCreateView,
+    FeedbackCreateView,
+    FeedbackListView,
+    FeedbackReplyListCreateView,
 )
 
 urlpatterns = [

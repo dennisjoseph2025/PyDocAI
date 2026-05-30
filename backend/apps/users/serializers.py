@@ -1,5 +1,6 @@
-from rest_framework import serializers
 from django.contrib.auth import authenticate
+from rest_framework import serializers
+
 from .models import User
 
 
@@ -83,11 +84,11 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save()
-        
+
 
 class GithubAuthSerializer(serializers.Serializer):
     code = serializers.CharField()
-    
+
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -97,4 +98,3 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField()
     token = serializers.UUIDField()
     new_password = serializers.CharField(write_only=True, min_length=8)
-        

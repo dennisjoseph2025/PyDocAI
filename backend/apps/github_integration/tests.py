@@ -1,7 +1,9 @@
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APITestCase
-from unittest.mock import patch
-from django.contrib.auth import get_user_model
+
 from apps.github_integration.views import parse_github_url
 
 User = get_user_model()

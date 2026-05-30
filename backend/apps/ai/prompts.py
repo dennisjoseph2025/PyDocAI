@@ -278,8 +278,6 @@ result = {name}({args_examples})
             margs_examples = ', '.join(_get_example_value(a) for a in m.get('args', []))
             mret = m.get('returns') or 'None'
             mline = m.get('line', '?')
-            mconns = m.get('connections', [])
-            mconn_str = f" (calls: {', '.join(mconns)})" if mconns else ''
             is_private = m.get('is_private', False)
             visibility = 'Private' if is_private else 'Public'
 
@@ -502,10 +500,10 @@ def _build_skeleton(ordered_items: list) -> str:
                 mconns = m.get('connections', [])
                 mconn_str = f" (calls: {', '.join(mconns)})" if mconns else ''
                 lines.append(f"  #### METHOD at line {mline}: `{mname}({margs}) -> {mret}`{mconn_str}")
-                lines.append(f"  - **Purpose:** [What it does]")
-                lines.append(f"  - **Behavior:** [Step-by-step logic]")
-                lines.append(f"  - **Args:** [table]")
-                lines.append(f"  - **Calls:** [list connections]")
+                lines.append("  - **Purpose:** [What it does]")
+                lines.append("  - **Behavior:** [Step-by-step logic]")
+                lines.append("  - **Args:** [table]")
+                lines.append("  - **Calls:** [list connections]")
             lines.append("")
 
     lines.append("## Notes")

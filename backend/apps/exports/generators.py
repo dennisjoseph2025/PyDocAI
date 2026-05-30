@@ -7,19 +7,19 @@ def export_project_as_markdown(project_id: str) -> str:
     # Check if project-level docs exist (new feature)
     if project.readme_docs or (project.project_info and project.project_info.get('summary')):
         combined = ""
-        
+
         # Add README if available
         if project.readme_docs:
             combined += f"# {project.name} — README\n\n"
             combined += project.readme_docs
             combined += "\n\n---\n\n"
-        
+
         # Add project summary/documentation if available
         if project.project_info and project.project_info.get('summary'):
             combined += f"# {project.name} — Project Documentation\n\n"
             combined += project.project_info.get('summary')
             combined += "\n\n---\n\n"
-        
+
         # Add project info as JSON if available
         if project.project_info and not project.project_info.get('summary'):
             combined += f"# {project.name} — Project Information\n\n"
@@ -28,10 +28,10 @@ def export_project_as_markdown(project_id: str) -> str:
             combined += "```json\n"
             combined += json.dumps(project.project_info, indent=2)
             combined += "\n```\n\n"
-        
+
         if combined:
             return combined
-    
+
     # Fallback to per-file docs (legacy behavior)
     all_files = ProjectFile.objects.filter(project=project)
 
