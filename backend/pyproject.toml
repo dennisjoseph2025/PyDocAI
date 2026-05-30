@@ -20,10 +20,39 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "redis>=7.4.0",
     "gunicorn>=23.0.0",
+    "gevent>=24.10.1",
     "weasyprint>=68.1",
     "tomli>=2.0.1",
     "anthropic>=0.45.0",
     "django-anymail>=15.0",
     "django-filter>=25.2",
     "whitenoise>=6.7.0",
+    "pytest>=8.0",
+    "pytest-django>=4.9",
+    "coverage>=7.6",
+    "ruff>=0.8",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.9",
+    "coverage>=7.6",
+    "ruff>=0.8",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.development"
+testpaths = ["apps"]
+python_files = ["tests.py", "test_*.py"]
+
+[tool.coverage.run]
+source = ["apps"]
+omit = ["*/migrations/*", "*/tests*"]

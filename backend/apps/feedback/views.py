@@ -21,6 +21,9 @@ class FeedbackListView(generics.ListAPIView):
     """Authenticated users see their own feedback history."""
     permission_classes = [permissions.IsAuthenticated]
     serializer_class   = FeedbackSerializer
+    search_fields = ['category', 'message']
+    filterset_fields = ['category', 'is_resolved']
+    ordering_fields = ['created_at', 'category']
 
     def get_queryset(self):
         return Feedback.objects.filter(user=self.request.user).prefetch_related('replies__user')
@@ -30,6 +33,8 @@ class AdminFeedbackView(generics.ListAPIView):
     """Admin-only view of all feedback with filter support."""
     permission_classes = [permissions.IsAuthenticated]
     serializer_class   = FeedbackSerializer
+    search_fields = ['message', 'user__name', 'user__email', 'category']
+    ordering_fields = ['created_at', 'category', 'is_resolved']
 
     def get_queryset(self):
         user = self.request.user

@@ -9,6 +9,11 @@ def _sanitize_markdown(text: str) -> str:
     if not text:
         return text
 
+    # Wrap bare "mermaid" blocks in proper fences
+    text = re.sub(r'^mermaid\s*\n', '```mermaid\n', text)
+    if text.startswith('```mermaid') and not text.endswith('```'):
+        text += '\n```'
+
     # Fix "code\nCopy\npython" artifacts -> proper code fences
     text = re.sub(r'\bcode\s*\n\s*Copy\s*\n\s*python\s*\n', '```python\n', text)
     text = re.sub(r'\bcode\s*\n\s*Copy\s*\n\s*(\w+)\s*\n', r'```\1\n', text)

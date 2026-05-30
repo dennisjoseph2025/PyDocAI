@@ -1,56 +1,40 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
-        bg: {
-          primary:  "#0a0a0f",
-          surface:  "#111118",
-          elevated: "#1a1a24",
-        },
-        border: {
-          DEFAULT: "#2a2a3a",
-          subtle:  "#1e1e2e",
-        },
-        accent: {
-          DEFAULT: "#7c6af7",
-          hover:   "#9585f9",
-          glow:    "#7c6af733",
-        },
-        success: "#22d3a0",
-        warning: "#f59e0b",
-        danger:  "#f43f5e",
-        ink: {
-          primary:   "#f1f0ff",
-          secondary: "#8b8aa8",
-          muted:     "#4a4a6a",
-        },
-        code: "#0d0d16",
+        // Python Theme Colors
+        'bg-primary': '#0b1320',    // Very dark navy blue
+        'bg-surface': '#111d2e',    // Dark blue
+        'bg-elevated': '#16273d',   // Slightly lighter blue
+        'border': '#203650',        // Border blue
+        'ink-primary': '#f8fafc',   // Slate 50
+        'ink-secondary': '#cbd5e1', // Slate 300
+        'ink-muted': '#64748b',     // Slate 500
+        'accent': '#FFD43B',        // Python Yellow
+        'accent-hover': '#FCE883',  // Lighter Yellow
+        'accent-blue': '#3776AB',   // Python Blue
+        'code': '#080e17',          // Darker for code blocks
+        'success': '#10b981',
+        'danger': '#ef4444',
+        'warning': '#f59e0b',
       },
       fontFamily: {
-        display: ["Syne", "sans-serif"],
-        body:    ["DM Sans", "sans-serif"],
-        mono:    ["JetBrains Mono", "monospace"],
+        display: ['"Space Grotesk"', 'sans-serif'],
+        body: ['"Inter"', 'sans-serif'],
+        mono: ['"Fira Code"', 'monospace'],
       },
       boxShadow: {
-        glow:    "0 0 20px #7c6af733",
-        "glow-lg": "0 0 40px #7c6af755",
+        'glow': '0 0 20px rgba(255, 212, 59, 0.15)',
+        'glow-lg': '0 0 30px rgba(255, 212, 59, 0.25)',
       },
       backgroundImage: {
-        "radial-glow": "radial-gradient(ellipse at center, #7c6af715 0%, transparent 70%)",
-      },
-      animation: {
-        "fade-in":    "fadeIn 0.4s ease forwards",
-        "slide-up":   "slideUp 0.4s ease forwards",
-        "spin-slow":  "spin 2s linear infinite",
-        "pulse-glow": "pulseGlow 2s ease-in-out infinite",
-      },
-      keyframes: {
-        fadeIn:    { "0%": { opacity: 0 }, "100%": { opacity: 1 } },
-        slideUp:   { "0%": { opacity: 0, transform: "translateY(16px)" }, "100%": { opacity: 1, transform: "translateY(0)" } },
-        pulseGlow: { "0%, 100%": { boxShadow: "0 0 10px #7c6af733" }, "50%": { boxShadow: "0 0 30px #7c6af766" } },
-      },
+        'radial-glow': 'radial-gradient(circle at 50% 0%, rgba(55, 118, 171, 0.2), transparent 60%)',
+      }
     },
   },
   plugins: [],

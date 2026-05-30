@@ -1,47 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  html { font-family: 'DM Sans', sans-serif; }
+  html { font-family: 'Inter', sans-serif; }
   body {
-    background-color: #0a0a0f;
-    color: #f1f0ff;
+    background-color: #0b1320;
+    color: #f8fafc;
     min-height: 100vh;
     position: relative;
   }
-  /* Grain texture overlay */
+  /* Subtle grain texture overlay */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   }
-  /* Custom scrollbar */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: #0a0a0f; }
-  ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #7c6af7; }
+  /* IDE-style scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #080e17; border-left: 1px solid #203650; }
+  ::-webkit-scrollbar-thumb { background: #203650; border: 2px solid #080e17; border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3776AB; }
 }
 
 @layer components {
+  /* Redefining glass-card to a solid, sharp IDE-style panel */
   .glass-card {
-    @apply bg-bg-elevated/70 backdrop-blur-xl border border-border rounded-2xl;
+    @apply bg-bg-surface border border-border rounded-md shadow-sm;
   }
   .btn-accent {
-    @apply bg-accent hover:bg-accent-hover text-white font-display font-bold px-6 py-3 rounded-xl transition-all duration-200 hover:shadow-glow active:scale-95;
+    @apply bg-accent hover:bg-accent-hover text-[#0b1320] font-display font-bold px-5 py-2.5 rounded-md transition-colors duration-150 active:scale-[0.98];
   }
   .btn-ghost {
-    @apply border border-border hover:border-accent text-ink-secondary hover:text-ink-primary px-6 py-3 rounded-xl transition-all duration-200;
+    @apply border border-border hover:border-accent-blue text-ink-secondary hover:text-ink-primary bg-bg-primary px-5 py-2.5 rounded-md transition-colors duration-150;
   }
   .input-field {
-    @apply w-full bg-bg-surface border border-border rounded-xl px-4 py-3 text-ink-primary placeholder-ink-muted font-body
-           focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200;
+    @apply w-full bg-[#080e17] border border-border rounded-md px-4 py-2.5 text-ink-primary placeholder-ink-muted font-mono text-sm
+           focus:outline-none focus:border-accent-blue focus:ring-1 focus:ring-accent-blue transition-colors duration-150;
   }
   .section-title {
     @apply font-display font-bold text-ink-primary;
+  }
+  /* Badge styling for IDE look */
+  .dev-badge {
+    @apply font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded border flex items-center gap-1.5 w-max;
   }
 }

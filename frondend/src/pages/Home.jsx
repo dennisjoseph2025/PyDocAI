@@ -1,36 +1,24 @@
 import { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import CodeBlock from '../components/CodeBlock'
-import { IconBolt, IconBrain, IconTable, IconLink, IconRocket, IconArchive } from '../components/Icons'
+import { IconBolt, IconBrain, IconTable, IconLink, IconRocket, IconArchive, IconCode, IconDatabase } from '../components/Icons'
 
-const howItWorks = [
-  {
-    step: '01',
-    title: 'Upload Your Code',
-    desc: 'Drop your Django project files, paste code snippets, or connect a Git repository. We handle the rest.',
-  },
-  {
-    step: '02',
-    title: 'AI Analyzes Everything',
-    desc: 'Our engine parses models, views, serializers, URLs, and tests to understand your project architecture.',
-  },
-  {
-    step: '03',
-    title: 'Get Documentation',
-    desc: 'Receive beautifully structured docs with field tables, endpoint specs, and code examples — ready to share.',
-  },
+const pipelineSteps = [
+  { step: '01', command: 'git clone <repo>', title: 'INGEST_SOURCE', desc: 'Connect a Git repository, upload a local codebase archive, or input raw Python files directly.' },
+  { step: '02', command: 'pydocai analyze ./', title: 'PARSE_AST_TREE', desc: 'The engine parses models, views, serializers, and URLs to build a relational map of your Django architecture.' },
+  { step: '03', command: 'pydocai compile --md', title: 'GENERATE_MARKDOWN', desc: 'Receive standard Markdown files featuring field constraints, foreign key mappings, and endpoint specs.' },
 ]
 
-const features = [
-  { icon: IconBolt, title: 'Instant Generation', desc: 'Upload and get results in seconds, not hours of manual writing.' },
-  { icon: IconBrain, title: 'AI-Powered Analysis', desc: 'Deep understanding of Django patterns including models, views, serializers, and URL routing.' },
-  { icon: IconTable, title: 'Field Tables', desc: 'Auto-generated tables for model fields with types, constraints, and descriptions.' },
-  { icon: IconLink, title: 'API Endpoints', desc: 'Full REST API documentation with methods, parameters, and response examples.' },
-  { icon: IconRocket, title: 'Beautiful Output', desc: 'Clean, structured docs with syntax highlighting and a professional layout.' },
-  { icon: IconArchive, title: 'Multiple Inputs', desc: 'Upload files, paste code, or connect a Git repository — your workflow, your choice.' },
+const modules = [
+  { icon: IconBolt, title: 'ASYNC_COMPILATION', desc: 'Upload your codebase and retrieve complete documentation payloads in seconds via optimized AST parsing.' },
+  { icon: IconBrain, title: 'AI_PATTERN_RECOGNITION', desc: 'Deep contextual understanding of complex Django patterns, DRF views, and nested serializers.' },
+  { icon: IconTable, title: 'SCHEMA_GENERATION', desc: 'Auto-compiled Markdown tables detailing database models, field types, constraints, and relationships.' },
+  { icon: IconLink, title: 'ENDPOINT_MAPPING', desc: 'Automated REST API documentation including allowed HTTP methods, path parameters, and JSON response bodies.' },
+  { icon: IconRocket, title: 'VS_CODE_COMPATIBLE', desc: 'Generated markdown is strictly formatted to render perfectly in GitHub, GitLab, and VS Code preview modes.' },
+  { icon: IconArchive, title: 'MULTI_SOURCE_INGESTION', desc: 'Supports direct .zip uploads, single .py files, and public/private GitHub repository linking.' },
 ]
 
 const sampleInput = `from django.db import models
@@ -46,63 +34,47 @@ class Article(models.Model):
     )
     status = models.CharField(
         max_length=10,
-        choices=[
-            ('draft', 'Draft'),
-            ('published', 'Published'),
-        ],
+        choices=[('draft', 'Draft'), ('published', 'Published')],
         default='draft'
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return self.title`
+        ordering = ['-created_at']`
 
 const sampleFields = [
-  { name: 'title', type: 'CharField', constraints: 'max_length=200', desc: 'The article headline' },
-  { name: 'slug', type: 'SlugField', constraints: 'unique=True', desc: 'URL-friendly identifier' },
-  { name: 'content', type: 'TextField', constraints: '—', desc: 'Full article body' },
-  { name: 'author', type: 'ForeignKey → User', constraints: 'CASCADE', desc: 'Article author reference' },
-  { name: 'status', type: 'CharField', constraints: 'choices, default=draft', desc: 'Publication status' },
-  { name: 'created_at', type: 'DateTimeField', constraints: 'auto_now_add', desc: 'Creation timestamp' },
-  { name: 'updated_at', type: 'DateTimeField', constraints: 'auto_now', desc: 'Last update timestamp' },
+  { name: 'title', type: 'CharField', const: 'max_length=200', desc: 'Article headline string' },
+  { name: 'slug', type: 'SlugField', const: 'unique=True', desc: 'URL-friendly identifier' },
+  { name: 'content', type: 'TextField', const: '—', desc: 'Full HTML/Markdown body' },
+  { name: 'author', type: 'ForeignKey', const: 'User (CASCADE)', desc: 'Author relational mapping' },
+  { name: 'status', type: 'CharField', const: 'default=draft', desc: 'Publication state enum' },
+  { name: 'created_at', type: 'DateTimeField', const: 'auto_now_add', desc: 'Initial creation timestamp' },
 ]
 
 const techBadges = ['Django', 'DRF', 'Python 3.x', 'REST APIs', 'Models', 'Serializers', 'Views', 'URLs']
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth()
-  const navigate = useNavigate()
-
-  // useEffect(() => {
-  //   if (!isLoading && isAuthenticated) {
-  //     navigate('/input', { replace: true })
-  //   }
-  // }, [isAuthenticated, isLoading, navigate])
 
   if (isLoading) return null
+
   return (
-    <div className="relative z-10">
+    <div className="relative z-10 flex flex-col bg-bg-primary">
       <Navbar />
 
-      {/* ── Hero Section ────────────────────────────── */}
-      <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-bg-primary">
-        {/* Radial glow */}
+      {/* --- HERO SECTION (Original Soft/Rounded Design) --- */}
+      <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-bg-primary border-b border-border">
         <div className="absolute inset-0 bg-radial-glow pointer-events-none" />
-        {/* Grid lines */}
-        <div className="absolute inset-0 opacity-5 pointer-events-none"
+        <div className="absolute inset-0 opacity-10 pointer-events-none"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 0v60H0' fill='none' stroke='%237c6af7' stroke-width='0.5'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 0v60H0' fill='none' stroke='%233776AB' stroke-width='1'/%3E%3C/svg%3E")`,
             backgroundSize: '60px 60px'
           }}
         />
 
         <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
           <h1 className="font-display font-extrabold text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-none tracking-tight text-ink-primary animate-slide-up">
-            Documentation,<br />
+            <span className="text-accent-blue">Python</span> Docs,<br />
             <span className="text-accent">generated</span>.
           </h1>
           <p className="text-lg md:text-xl text-ink-secondary text-center max-w-2xl mx-auto mt-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
@@ -110,21 +82,15 @@ export default function Home() {
           </p>
           <div className="flex gap-4 justify-center mt-10 animate-slide-up" style={{ animationDelay: '200ms' }}>
             {isAuthenticated ? (
-              <Link to="/dashboard" className="btn-accent text-base">
-                Go to Dashboard →
-              </Link>
+              <Link to="/dashboard" className="btn-accent text-base">Go to Dashboard →</Link>
             ) : (
-              <Link to="/register" className="btn-accent text-base">
-                Start for Free →
-              </Link>
+              <Link to="/register" className="btn-accent text-base">Start for Free →</Link>
             )}
-            <a href="#how-it-works" className="btn-ghost text-base">
-              See How It Works
-            </a>
+            <a href="#pipeline" className="btn-ghost text-base">See How It Works</a>
           </div>
           <div className="flex gap-3 mt-8 justify-center flex-wrap animate-slide-up" style={{ animationDelay: '300ms' }}>
             {techBadges.map((badge) => (
-              <span key={badge} className="text-xs font-mono text-ink-secondary border border-border rounded-full px-3 py-1 bg-bg-surface">
+              <span key={badge} className="text-xs font-mono text-ink-secondary border border-border rounded-full px-3 py-1 bg-bg-surface shadow-sm">
                 {badge}
               </span>
             ))}
@@ -132,81 +98,125 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── How It Works ────────────────────────────── */}
-      <section id="how-it-works" className="py-32 bg-bg-primary">
-        <div className="max-w-5xl mx-auto px-6">
-          <h2 className="section-title text-4xl text-center mb-16">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {howItWorks.map((item) => (
-              <div key={item.step} className="glass-card p-8 hover:-translate-y-1 hover:shadow-glow transition-all duration-300 group">
-                <span className="font-display font-bold text-6xl text-accent/20 group-hover:text-accent/40 transition-colors">
-                  {item.step}
-                </span>
-                <h3 className="font-display font-bold text-xl mt-4 mb-2 text-ink-primary">{item.title}</h3>
-                <p className="text-ink-secondary text-sm leading-relaxed">{item.desc}</p>
+      {/* --- PIPELINE SECTION (New Technical IDE Design) --- */}
+      <section id="pipeline" className="py-24 bg-[#080e17] border-b border-border/50">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center gap-3 mb-8">
+            <IconDatabase className="w-5 h-5 text-accent-blue" />
+            <h2 className="font-mono text-sm text-ink-muted uppercase tracking-widest">Execution_Pipeline</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 border border-border rounded-md overflow-hidden bg-bg-surface">
+            {pipelineSteps.map((item, idx) => (
+              <div key={item.step} className={`p-8 relative ${idx !== pipelineSteps.length - 1 ? 'border-b md:border-b-0 md:border-r border-border' : ''}`}>
+                <div className="font-mono text-[10px] text-accent-blue mb-4">
+                  <span className="text-ink-muted mr-2">$</span>{item.command}
+                </div>
+                <h3 className="font-display font-bold text-lg text-ink-primary mb-3">
+                  <span className="text-accent mr-2">{item.step}.</span>{item.title}
+                </h3>
+                <p className="text-ink-secondary text-sm leading-relaxed">
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Live Example ────────────────────────────── */}
-      <section id="live-example" className="py-32 bg-bg-surface/50">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="section-title text-4xl text-center mb-16">See It in Action</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* Input panel */}
-            <div>
-              <p className="text-xs font-mono text-ink-muted uppercase tracking-widest mb-3">Input — models.py</p>
-              <CodeBlock code={sampleInput} filename="models.py" language="python" />
-            </div>
-            {/* Output panel */}
-            <div>
-              <p className="text-xs font-mono text-ink-muted uppercase tracking-widest mb-3">Output — Generated Docs</p>
-              <div className="glass-card p-8">
-                <h3 className="font-display font-bold text-2xl text-ink-primary mb-1">Article</h3>
-                <p className="text-ink-secondary text-sm mb-6">
-                  Represents a blog article with draft/published workflow. Ordered by creation date descending.
-                </p>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-bg-surface">
-                      <th className="text-left font-display font-bold text-ink-secondary text-xs uppercase tracking-widest py-2 px-3">Field</th>
-                      <th className="text-left font-display font-bold text-ink-secondary text-xs uppercase tracking-widest py-2 px-3">Type</th>
-                      <th className="text-left font-display font-bold text-ink-secondary text-xs uppercase tracking-widest py-2 px-3 hidden sm:table-cell">Constraints</th>
-                      <th className="text-left font-display font-bold text-ink-secondary text-xs uppercase tracking-widest py-2 px-3">Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sampleFields.map((f) => (
-                      <tr key={f.name} className="border-t border-border">
-                        <td className="py-2 px-3 font-mono text-accent text-xs">{f.name}</td>
-                        <td className="py-2 px-3 text-ink-primary">{f.type}</td>
-                        <td className="py-2 px-3 text-ink-muted hidden sm:table-cell">{f.constraints}</td>
-                        <td className="py-2 px-3 text-ink-secondary">{f.desc}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      {/* --- I/O PREVIEW SECTION (New Technical IDE Design) --- */}
+      <section className="py-24 bg-bg-primary">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="flex items-center gap-3 mb-8">
+            <IconCode className="w-5 h-5 text-accent" />
+            <h2 className="font-mono text-sm text-ink-muted uppercase tracking-widest">I/O_Compilation_Preview</h2>
+          </div>
+
+          <div className="border border-border rounded-md bg-[#0b1320] shadow-2xl overflow-hidden flex flex-col lg:flex-row">
+            
+            {/* Left Pane - Input Code */}
+            <div className="w-full lg:w-[45%] flex flex-col border-b lg:border-b-0 lg:border-r border-border">
+              <div className="bg-[#080e17] px-4 py-2 border-b border-border flex items-center gap-3">
+                <div className="flex gap-1.5 opacity-50 hover:opacity-100 transition-opacity">
+                  <div className="w-3 h-3 rounded-full bg-danger"></div>
+                  <div className="w-3 h-3 rounded-full bg-warning"></div>
+                  <div className="w-3 h-3 rounded-full bg-success"></div>
+                </div>
+                <span className="text-[11px] font-mono text-ink-muted ml-2">app/models.py</span>
+              </div>
+              <div className="flex-1 bg-[#080e17]">
+                <CodeBlock code={sampleInput} filename="" language="python" />
               </div>
             </div>
+
+            {/* Right Pane - Rendered Output */}
+            <div className="w-full lg:w-[55%] flex flex-col bg-[#0b1320]">
+              <div className="bg-[#080e17] px-4 py-2 border-b border-border flex items-center">
+                <span className="text-[11px] font-mono text-accent-blue border-b border-accent-blue pb-[9px] -mb-[9px]">
+                  models.md
+                </span>
+                <span className="text-[11px] font-mono text-ink-muted ml-6 cursor-not-allowed">
+                  endpoints.md
+                </span>
+              </div>
+              <div className="p-8 flex-1 overflow-x-auto">
+                <div className="border-l-4 border-accent-blue pl-4 mb-6">
+                  <h3 className="font-display font-bold text-2xl text-ink-primary mb-1">Article <span className="text-sm font-mono text-ink-muted font-normal">Model</span></h3>
+                  <p className="text-ink-secondary text-sm">
+                    Represents a blog article with draft/published workflow. Ordered by creation date descending.
+                  </p>
+                </div>
+                
+                <div className="border border-border rounded overflow-hidden">
+                  <table className="w-full text-left font-mono text-xs">
+                    <thead className="bg-[#080e17] border-b border-border text-ink-muted">
+                      <tr>
+                        <th className="px-4 py-2 font-normal">Field</th>
+                        <th className="px-4 py-2 font-normal">Type</th>
+                        <th className="px-4 py-2 font-normal hidden sm:table-cell">Constraints</th>
+                        <th className="px-4 py-2 font-normal">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border text-ink-secondary">
+                      {sampleFields.map((f) => (
+                        <tr key={f.name} className="hover:bg-bg-surface/50">
+                          <td className="px-4 py-3 text-accent font-bold">{f.name}</td>
+                          <td className="px-4 py-3">{f.type}</td>
+                          <td className="px-4 py-3 text-ink-muted hidden sm:table-cell">{f.const}</td>
+                          <td className="px-4 py-3">{f.desc}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* ── Features Grid ────────────────────────────── */}
-      <section id="features" className="py-32 max-w-6xl mx-auto px-6">
-        <h2 className="section-title text-4xl text-center mb-16">Why PyDocAI?</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((f) => (
-            <div key={f.title} className="glass-card p-6 hover:border-accent/50 transition-all duration-200">
-              <span className="text-accent mb-3 block">
-                <f.icon className="w-7 h-7" />
-              </span>
-              <h3 className="font-display font-bold text-ink-primary mb-1">{f.title}</h3>
-              <p className="text-ink-secondary text-sm">{f.desc}</p>
-            </div>
-          ))}
+      {/* --- CORE MODULES SECTION (New Technical IDE Design) --- */}
+      <section className="py-24 bg-[#080e17] border-t border-border">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center gap-3 mb-8">
+            <IconArchive className="w-5 h-5 text-accent" />
+            <h2 className="font-mono text-sm text-ink-muted uppercase tracking-widest">System_Capabilities</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border border border-border rounded-md overflow-hidden">
+            {modules.map((m) => (
+              <div key={m.title} className="bg-bg-surface p-8 flex items-start gap-5 hover:bg-[#16273d] transition-colors group">
+                <div className="mt-1 text-accent border border-accent/20 bg-accent/5 p-2 rounded group-hover:bg-accent/10 transition-colors">
+                  <m.icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-mono text-sm font-bold text-ink-primary tracking-wide mb-2">{m.title}</h4>
+                  <p className="text-ink-secondary text-sm leading-relaxed">{m.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

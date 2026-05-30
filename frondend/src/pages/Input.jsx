@@ -1,23 +1,23 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { analyzeFile, analyzeFolder, importFromGithub, getGithubRepos, getGithubRepoFolders, getPublicRepoInfo, getPublicRepoFolders, importPublicRepo } from '../api'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
 import StepIndicator from '../components/StepIndicator'
-import { IconFile, IconArchive, IconLink, IconWarning, IconFolder, IconChevron, IconRefresh } from '../components/Icons'
+import { IconFile, IconArchive, IconLink, IconFolder, IconChevron, IconRefresh } from '../components/Icons'
 
 const tabs = [
-  { id: 'single', label: 'Single File',  icon: IconFile },
-  { id: 'upload', label: 'Project ZIP',  icon: IconArchive },
-  { id: 'git',    label: 'Git Repo',     icon: IconLink },
+  { id: 'upload', label: 'Local Directory (.zip)',  icon: IconArchive },
+  { id: 'git',    label: 'Cloud Git System',        icon: IconLink },
+  { id: 'single', label: 'Isolated Module (.py)',   icon: IconFile },
 ]
 
 const defaultSteps = [
-  { label: 'Uploading files...', done: false, active: false },
-  { label: 'Parsing Django project structure...', done: false, active: false },
-  { label: 'Analyzing models, views & serializers...', done: false, active: false },
-  { label: 'Generating documentation...', done: false, active: false },
-  { label: 'Finalizing output...', done: false, active: false },
+  { label: 'Initializing IO Stream Pipelines...', done: false, active: false },
+  { label: 'Decomposing Python Syntax Trees (AST)...', done: false, active: false },
+  { label: 'Mapping Class Interfaces & Serializers...', done: false, active: false },
+  { label: 'Compiling API Schemas & Document Trees...', done: false, active: false },
+  { label: 'Finalizing Output Buffers...', done: false, active: false },
 ]
 
 export default function Input() {
@@ -41,7 +41,6 @@ export default function Input() {
   const [loadingRepos, setLoadingRepos] = useState(false)
   const [loadingFolders, setLoadingFolders] = useState(false)
   const [showRepoDropdown, setShowRepoDropdown] = useState(false)
-  const [showBranchDropdown, setShowBranchDropdown] = useState(false)
   const [showFolderDropdown, setShowFolderDropdown] = useState(false)
   const [githubConnected, setGithubConnected] = useState(false)
   const [publicRepoUrl, setPublicRepoUrl] = useState('')
@@ -52,6 +51,7 @@ export default function Input() {
   const [loadingPublicRepo, setLoadingPublicRepo] = useState(false)
   const [loadingPublicFolders, setLoadingPublicFolders] = useState(false)
   const [showPublicFolderDropdown, setShowPublicFolderDropdown] = useState(false)
+  
   const navigate = useNavigate()
   const { addToast } = useAuth()
 
@@ -69,11 +69,6 @@ export default function Input() {
       setGithubConnected(true)
     } catch (err) {
       setGithubConnected(false)
-      if (err.response?.status === 400) {
-        // GitHub not connected
-      } else if (err.response?.status === 401) {
-        // Not authenticated at all
-      }
     } finally {
       setLoadingRepos(false)
     }
@@ -102,35 +97,21 @@ export default function Input() {
     }
   }
 
-  const handleBranchSelect = (branch) => {
-    setSelectedBranch(branch)
-    setGithubBranch(branch)
-    setShowBranchDropdown(false)
-    if (selectedRepo) {
-      fetchFolders(selectedRepo.full_name, branch)
-    }
-  }
-
   const handleFolderSelect = (folder) => {
     setSelectedFolder(folder.path || folder.name)
     setShowFolderDropdown(false)
   }
 
   const fetchPublicRepoInfo = async () => {
-    if (!publicRepoUrl.trim()) {
-      addToast('Please enter a GitHub URL', 'error')
-      return
-    }
+    if (!publicRepoUrl.trim()) return
     setLoadingPublicRepo(true)
-    setPublicRepoInfo(null)
-    setPublicFolders([])
     try {
       const res = await getPublicRepoInfo({ url: publicRepoUrl })
       setPublicRepoInfo(res.data)
       setSelectedPublicBranch(res.data.default_branch || 'main')
       fetchPublicFolders(res.data.full_name, res.data.default_branch)
     } catch (err) {
-      addToast(err.response?.data?.detail || 'Failed to fetch repo info', 'error')
+      addToast('Failed to fetch public repo info', 'error')
     } finally {
       setLoadingPublicRepo(false)
     }
@@ -172,7 +153,7 @@ export default function Input() {
 
   const handleSubmit = async () => {
     if (!projectName.trim()) {
-      addToast('Please enter a project name', 'error')
+      addToast('Please input project name.', 'error')
       return
     }
 
@@ -183,23 +164,17 @@ export default function Input() {
     try {
       let res;
       if (active === 'upload') {
-        if (!zipFile) { addToast('Please upload a ZIP file', 'error'); setLoading(false); return }
-        if (!customInfo.trim()) { addToast('Please provide additional project details', 'error'); setLoading(false); return }
+        if (!zipFile) { addToast('Target directory archive (.zip) required', 'error'); setLoading(false); return }
+        if (!customInfo.trim()) { addToast('Context attributes are required', 'error'); setLoading(false); return }
         const fd = new FormData()
         fd.append('folder', zipFile)
         fd.append('name', projectName)
         fd.append('description', projectDesc)
         fd.append('source_type', 'folder')
-        // custom_info is mandatory for folder uploads (backend enforced)
-        try {
-          JSON.parse(customInfo)
-          fd.append('custom_info', customInfo)
-        } catch {
-          fd.append('custom_info', JSON.stringify({ details: customInfo }))
-        }
+        fd.append('custom_info', JSON.stringify({ details: customInfo }))
         res = await analyzeFolder(fd)
       } else if (active === 'single') {
-        if (!singleFile) { addToast('Please upload a .py file', 'error'); setLoading(false); return }
+        if (!singleFile) { addToast('Source .py file required', 'error'); setLoading(false); return }
         const fd = new FormData()
         fd.append('file', singleFile)
         fd.append('name', projectName)
@@ -216,7 +191,7 @@ export default function Input() {
             description: projectDesc,
           })
         } else {
-          if (!publicRepoUrl.trim()) { addToast('Please enter a GitHub URL', 'error'); setLoading(false); return }
+          if (!publicRepoUrl.trim()) { addToast('Please input Git remote url', 'error'); setLoading(false); return }
           res = await importPublicRepo({
             url: publicRepoUrl,
             branch: selectedPublicBranch || publicRepoInfo?.default_branch || 'main',
@@ -228,62 +203,73 @@ export default function Input() {
       }
 
       await stepsPromise
-      addToast('Documentation generated!', 'success')
-      const projectId = res.data.project_id || res.data.id
-      navigate(`/output/${projectId}`)
+      addToast('Document parsing finished.', 'success')
+      navigate(`/output/${res.data.project_id || res.data.id}`)
     } catch (err) {
-      addToast(err.response?.data?.error || 'Generation failed', 'error')
+      addToast('Failed compiling AST tree.', 'error')
       setLoading(false)
       setSteps(defaultSteps)
     }
   }
 
-  return (
-    <div className="relative z-10">
-      <Navbar />
-      <div className="min-h-screen bg-bg-primary py-16 px-4">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="font-display font-bold text-4xl text-ink-primary mb-2">Generate Documentation</h1>
-          <p className="text-ink-secondary mb-10">Upload your Django project and let AI do the heavy lifting.</p>
+  // Generates real-time manifest file text on the right side based on user inputs
+  const liveManifestJSON = JSON.stringify({
+    compiler_target: active.toUpperCase(),
+    workspace_declaration: {
+      name: projectName || "untitled_ast",
+      description: projectDesc || "No context specified",
+      source_io: active === 'upload' ? zipFile?.name || null : active === 'single' ? singleFile?.name || null : gitUrl || publicRepoUrl || null,
+      custom_attributes: customInfo ? { details: customInfo } : null,
+      git_environment: active === 'git' ? {
+        connection: githubConnected ? "AUTHORIZED_API" : "UNRESTRICTED_PUBLIC",
+        branch: githubConnected ? selectedBranch : selectedPublicBranch || "main",
+        target_directory: githubConnected ? selectedFolder : selectedPublicFolder
+      } : null
+    }
+  }, null, 2);
 
-          {/* Project Details */}
-          <div className="glass-card p-6 mb-8 space-y-4 animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-mono text-ink-muted uppercase tracking-widest mb-2">Project Name</label>
-                <input 
-                  value={projectName} 
-                  onChange={e => setProjectName(e.target.value)} 
-                  className="input-field" 
-                  placeholder="e.g. My Awesome API" 
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-mono text-ink-muted uppercase tracking-widest mb-2">Short Description (Optional)</label>
-                <input 
-                  value={projectDesc} 
-                  onChange={e => setProjectDesc(e.target.value)} 
-                  className="input-field" 
-                  placeholder="e.g. Documentation for the blog module" 
-                />
-              </div>
-            </div>
+  return (
+    <div className="relative z-10 bg-bg-primary min-h-screen text-ink-primary font-body">
+      <Navbar />
+      
+      <main className="max-w-7xl w-full mx-auto px-6 py-8 flex flex-col lg:flex-row gap-8">
+        
+        {/* Left Side: Compiler Config Forms */}
+        <section className="flex-1 space-y-6">
+          <div>
+            <h1 className="text-3xl font-display font-bold text-ink-primary">Configuration Studio</h1>
+            <p className="text-xs text-ink-secondary mt-1">Configure workspace inputs for local directories or remote Git targets.</p>
           </div>
 
-          {/* Tab selector */}
-          <div className="flex gap-1 bg-bg-surface border border-border rounded-xl p-1 mb-8">
+          {/* Form Tabs */}
+          <div className="flex bg-bg-surface border border-border p-1 rounded-xl">
             {tabs.map(tab => (
               <button key={tab.id} onClick={() => setActive(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${active === tab.id ? 'bg-accent text-white shadow-glow' : 'text-ink-secondary hover:text-ink-primary'}`}>
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-mono font-medium transition-all duration-200 ${active === tab.id ? 'bg-accent-blue text-white shadow-md' : 'text-ink-secondary hover:text-ink-primary'}`}>
                 <tab.icon className="w-4 h-4" /> {tab.label}
               </button>
             ))}
           </div>
 
-          {/* Single File Tab */}
+          {/* Core Configuration Inputs */}
+          <div className="glass-card p-6 space-y-4">
+            <h3 className="text-sm font-mono text-accent uppercase tracking-widest border-b border-border/40 pb-2">Workspace Identification</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-mono text-ink-secondary uppercase tracking-wider mb-2">Project Package Name</label>
+                <input value={projectName} onChange={e => setProjectName(e.target.value)} className="input-field text-xs font-mono" placeholder="django_core" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono text-ink-secondary uppercase tracking-wider mb-2">Module Descriptors</label>
+                <input value={projectDesc} onChange={e => setProjectDesc(e.target.value)} className="input-field text-xs font-mono" placeholder="Backend user auth views" />
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic IO Config Content based on tabs */}
           {active === 'single' && (
             <div className="animate-fade-in">
-              <label className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-200 cursor-pointer block ${isDragging ? 'border-accent bg-accent/5 shadow-glow' : 'border-border hover:border-accent/50 hover:bg-bg-surface'}`}
+              <label className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-200 cursor-pointer block ${isDragging ? 'border-accent bg-accent/5 shadow-glow' : 'border-border hover:border-accent-blue/50 hover:bg-bg-surface'}`}
                 onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={e => { 
@@ -298,18 +284,17 @@ export default function Input() {
                   setSingleFile(file);
                   if (!projectName) setProjectName(file.name.split('.')[0]);
                 }} />
-                <p className="text-accent mb-3"><IconFile className="w-12 h-12 mx-auto" /></p>
-                <p className="text-ink-primary font-display font-bold">
-                  {singleFile ? singleFile.name : 'Drop a .py file here or click to browse'}
+                <p className="text-accent-blue mb-3"><IconFile className="w-10 h-10 mx-auto" /></p>
+                <p className="text-ink-primary text-xs font-mono">
+                  {singleFile ? `[Target]: ${singleFile.name}` : 'Drop localized .py script file or browse'}
                 </p>
-                <p className="text-ink-muted text-sm mt-1">Select a single Python file</p>
               </label>
             </div>
           )}
-          {/* Project ZIP Tab */}
+
           {active === 'upload' && (
             <div className="animate-fade-in space-y-4">
-              <label className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-200 cursor-pointer block ${isDragging ? 'border-accent bg-accent/5 shadow-glow' : 'border-border hover:border-accent/50 hover:bg-bg-surface'}`}
+              <label className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-200 cursor-pointer block ${isDragging ? 'border-accent bg-accent/5 shadow-glow' : 'border-border hover:border-accent-blue/50 hover:bg-bg-surface'}`}
                 onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={e => { 
@@ -324,290 +309,136 @@ export default function Input() {
                   setZipFile(file);
                   if (!projectName) setProjectName(file.name.split('.')[0]);
                 }} />
-                <p className="text-accent mb-3"><IconArchive className="w-12 h-12 mx-auto" /></p>
-                <p className="text-ink-primary font-display font-bold">
-                  {zipFile ? zipFile.name : 'Drop project ZIP here or click to browse'}
-                </p>
-                <p className="text-ink-muted text-sm mt-1">
-                  {zipFile ? `${(zipFile.size / 1024 / 1024).toFixed(2)} MB` : 'Maximum 50MB (.zip only)'}
+                <p className="text-accent mb-3"><IconArchive className="w-10 h-10 mx-auto" /></p>
+                <p className="text-ink-primary text-xs font-mono">
+                  {zipFile ? `[Archive]: ${zipFile.name} (${(zipFile.size / 1024 / 1024).toFixed(2)} MB)` : 'Drop repository ZIP packaging or browse'}
                 </p>
               </label>
 
-              {/* custom_info — mandatory for folder uploads */}
-              <div className="glass-card p-5">
-                <label className="block text-xs font-mono text-ink-muted uppercase tracking-widest mb-2">
-                  Additional Project Details <span className="text-danger">*</span>
+              <div className="glass-card p-5 space-y-2">
+                <label className="block text-[10px] font-mono text-ink-secondary uppercase tracking-wider">
+                  Additional Project details <span className="text-danger">*</span>
                 </label>
                 <textarea
                   value={customInfo}
                   onChange={e => setCustomInfo(e.target.value)}
-                  rows={4}
-                  className="input-field resize-none font-body"
-                  placeholder={`Describe your project's purpose, main features, tech stack, etc.\n\nExample: This is a Django REST API for a task management app. It uses Celery for async jobs, Redis as broker, PostgreSQL for storage, and JWT for auth.`}
+                  rows={3}
+                  className="input-field resize-none text-xs font-mono"
+                  placeholder="Provide system features, database schema variables, or framework targets..."
                 />
-                <p className="text-[11px] text-ink-muted mt-2">
-                  <IconWarning className="w-3 h-3 inline mr-1" /> Required — helps the AI generate much more accurate documentation.
-                  You can write plain text or valid JSON.
-                </p>
               </div>
             </div>
           )}
 
-
-          {/* Git Tab */}
           {active === 'git' && (
             <div className="animate-fade-in space-y-4">
               <div className="glass-card p-6 space-y-4">
                 {!githubConnected && (
-                  <div className="mb-4 p-4 bg-bg-surface rounded-lg border border-border">
-                    <p className="text-sm text-ink-secondary mb-3">Connect your GitHub account to import private repositories, or paste a public repo URL below.</p>
-                    <a
-                      href={`https://github.com/login/oauth/authorize?client_id=${import.meta.env.VITE_GITHUB_CLIENT_ID || ''}&redirect_uri=${window.location.origin}/auth/github/callback&scope=repo`}
-                      className="inline-flex items-center gap-2 bg-ink-primary text-white px-4 py-2 rounded-lg hover:bg-ink-secondary transition-colors text-sm font-medium"
-                    >
-                      <IconLink className="w-4 h-4" />
-                      Connect GitHub
+                  <div className="p-4 bg-bg-surface rounded-xl border border-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <p className="text-xs text-ink-secondary">Authorize secure REST pipeline connection to your GitHub profile.</p>
+                    <a href={`https://github.com/login/oauth/authorize?client_id=${import.meta.env.VITE_GITHUB_CLIENT_ID || ''}&redirect_uri=${window.location.origin}/auth/github/callback&scope=repo`}
+                      className="text-xs font-mono bg-[#24292e] text-white px-4 py-2.5 rounded-lg border border-[#444c56] hover:bg-[#2f363d] flex-shrink-0">
+                      Link GitHub
                     </a>
                   </div>
                 )}
 
                 {githubConnected ? (
-                  <>
+                  <div className="space-y-4 text-xs font-mono">
                     <div>
-                      <label className="block text-sm font-medium text-ink-secondary mb-2">Repository</label>
+                      <label className="block text-[10px] text-ink-secondary uppercase tracking-wider mb-2">Repository Workspace</label>
                       <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setShowRepoDropdown(!showRepoDropdown)}
-                          className="w-full flex items-center justify-between input-field"
-                        >
-                          <span className={selectedRepo ? 'text-ink-primary' : 'text-ink-muted'}>
-                            {selectedRepo ? selectedRepo.full_name : 'Select a repository...'}
-                          </span>
+                        <button type="button" onClick={() => setShowRepoDropdown(!showRepoDropdown)} className="w-full flex items-center justify-between input-field text-xs">
+                          <span>{selectedRepo ? selectedRepo.full_name : 'Select git repository...'}</span>
                           <IconChevron className="w-4 h-4 text-ink-muted" />
                         </button>
                         {showRepoDropdown && (
-                          <div className="absolute z-50 w-full mt-1 bg-bg-surface border border-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                            {loadingRepos ? (
-                              <div className="p-4 text-center text-ink-muted">Loading repositories...</div>
-                            ) : repos.length === 0 ? (
-                              <div className="p-4 text-center text-ink-muted">
-                                No repositories found. Connect your GitHub account first.
-                              </div>
-                            ) : (
-                              repos.map(repo => (
-                                <button
-                                  key={repo.id}
-                                  onClick={() => handleRepoSelect(repo)}
-                                  className={`w-full text-left px-4 py-3 hover:bg-bg-primary transition-colors ${selectedRepo?.id === repo.id ? 'bg-accent/10' : ''}`}
-                                >
-                                  <div className="font-medium text-ink-primary">{repo.name}</div>
-                                  <div className="text-xs text-ink-muted">{repo.full_name}</div>
-                                </button>
-                              ))
-                            )}
+                          <div className="absolute z-50 w-full mt-1 bg-bg-surface border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                            {repos.map(repo => (
+                              <button key={repo.id} onClick={() => handleRepoSelect(repo)} className="w-full text-left px-4 py-2 hover:bg-bg-primary text-xs">
+                                {repo.full_name}
+                              </button>
+                            ))}
                           </div>
                         )}
                       </div>
                     </div>
 
                     {selectedRepo && (
-                      <>
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-ink-secondary mb-2">Branch</label>
-                          <div className="flex gap-2">
-                            <input
-                              value={selectedBranch || ''}
-                              onChange={e => {
-                                setSelectedBranch(e.target.value)
-                                setGithubBranch(e.target.value)
-                              }}
-                              className="input-field flex-1"
-                              placeholder={selectedRepo.default_branch || 'main'}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedBranch(selectedRepo.default_branch)
-                                setGithubBranch(selectedRepo.default_branch)
-                                fetchFolders(selectedRepo.full_name, selectedRepo.default_branch)
-                              }}
-                              className="px-3 py-2 bg-bg-surface border border-border rounded-lg text-sm text-ink-secondary hover:text-ink-primary transition-colors"
-                              title={`Use default: ${selectedRepo.default_branch}`}
-                            >
-                              Default
-                            </button>
-                          </div>
+                          <label className="block text-[10px] text-ink-secondary uppercase tracking-wider mb-2">Target branch</label>
+                          <input value={selectedBranch || ''} onChange={e => { setSelectedBranch(e.target.value); setGithubBranch(e.target.value); }} className="input-field text-xs" placeholder={selectedRepo.default_branch || 'main'} />
                         </div>
-
                         <div>
-                          <label className="block text-sm font-medium text-ink-secondary mb-2">Folder Path</label>
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setShowFolderDropdown(!showFolderDropdown)}
-                              className="w-full flex items-center justify-between input-field"
-                            >
-                              <span className="text-ink-primary flex items-center gap-2">
-                                <IconFolder className="w-4 h-4" />
-                                {selectedFolder || '/'}
-                              </span>
-                              <IconChevron className="w-4 h-4 text-ink-muted" />
-                            </button>
-                            {showFolderDropdown && (
-                              <div className="absolute z-50 w-full mt-1 bg-bg-surface border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                <button
-                                  onClick={() => handleFolderSelect({ path: '/' })}
-                                  className={`w-full text-left px-4 py-2 hover:bg-bg-primary flex items-center gap-2 ${selectedFolder === '/' ? 'bg-accent/10' : ''}`}
-                                >
-                                  <IconFolder className="w-4 h-4" /> / (root)
-                                </button>
-                                {loadingFolders ? (
-                                  <div className="px-4 py-2 text-ink-muted text-sm">Loading folders...</div>
-                                ) : (
-                                  folders.filter(f => f.type === 'tree').map(folder => (
-                                    <button
-                                      key={folder.path}
-                                      onClick={() => handleFolderSelect(folder)}
-                                      className={`w-full text-left px-4 py-2 hover:bg-bg-primary flex items-center gap-2 ${selectedFolder === folder.path ? 'bg-accent/10' : ''}`}
-                                    >
-                                      <IconFolder className="w-4 h-4 text-ink-muted" />
-                                      <span className="text-ink-primary text-sm">{folder.path}</span>
-                                    </button>
-                                  ))
-                                )}
-                              </div>
-                            )}
-                          </div>
+                          <label className="block text-[10px] text-ink-secondary uppercase tracking-wider mb-2">Workspace Base path</label>
+                          <input value={selectedFolder} onChange={e => setSelectedFolder(e.target.value)} className="input-field text-xs" placeholder="/" />
                         </div>
-                      </>
+                      </div>
                     )}
-                  </>
+                  </div>
                 ) : (
-                  <>
+                  <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-ink-secondary mb-2">Public Repository URL</label>
+                      <label className="block text-[10px] font-mono text-ink-secondary uppercase tracking-wider mb-2">Unauthenticated Repository Remote Path (URL)</label>
                       <div className="flex gap-2">
-                        <input
-                          value={publicRepoUrl}
-                          onChange={e => {
-                            setPublicRepoUrl(e.target.value)
-                            setPublicRepoInfo(null)
-                          }}
-                          className="input-field flex-1"
-                          placeholder="https://github.com/owner/repo"
-                        />
-                        <button
-                          type="button"
-                          onClick={fetchPublicRepoInfo}
-                          disabled={loadingPublicRepo}
-                          className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/80 transition-colors disabled:opacity-50"
-                        >
-                          {loadingPublicRepo ? 'Loading...' : 'Fetch'}
+                        <input value={publicRepoUrl} onChange={e => { setPublicRepoUrl(e.target.value); setPublicRepoInfo(null); }} className="input-field text-xs font-mono" placeholder="https://github.com/django/django" />
+                        <button type="button" onClick={fetchPublicRepoInfo} disabled={loadingPublicRepo} className="px-4 py-2 bg-accent-blue hover:bg-accent-blue/80 text-white rounded-lg text-xs font-mono">
+                          {loadingPublicRepo ? 'Fetching...' : 'Fetch'}
                         </button>
                       </div>
                     </div>
 
                     {publicRepoInfo && (
-                      <>
-                        <div className="p-3 bg-bg-surface rounded-lg border border-border">
-                          <p className="text-ink-primary font-medium">{publicRepoInfo.full_name}</p>
-                          <p className="text-sm text-ink-muted">{publicRepoInfo.description || 'No description'}</p>
-                          <p className="text-xs text-ink-muted mt-1">
-                            {publicRepoInfo.language || 'N/A'} • {publicRepoInfo.stargazers_count} stars • {publicRepoInfo.forks_count} forks
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-ink-secondary mb-2">Branch</label>
-                          <div className="flex gap-2">
-                            <input
-                              value={selectedPublicBranch || ''}
-                              onChange={e => setSelectedPublicBranch(e.target.value)}
-                              className="input-field flex-1"
-                              placeholder={publicRepoInfo.default_branch || 'main'}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedPublicBranch(publicRepoInfo.default_branch)
-                                fetchPublicFolders(publicRepoInfo.full_name, publicRepoInfo.default_branch)
-                              }}
-                              className="px-3 py-2 bg-bg-surface border border-border rounded-lg text-sm text-ink-secondary hover:text-ink-primary transition-colors"
-                            >
-                              Default
-                            </button>
+                      <div className="p-4 bg-bg-surface border border-border rounded-lg space-y-2 text-xs font-mono">
+                        <p className="text-accent font-bold">{publicRepoInfo.full_name}</p>
+                        <div className="grid grid-cols-2 gap-4 pt-2">
+                          <div>
+                            <label className="block text-[9px] text-ink-muted uppercase">Selected Branch</label>
+                            <input value={selectedPublicBranch} onChange={e => setSelectedPublicBranch(e.target.value)} className="input-field text-xs mt-1" />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-ink-muted uppercase">Target Path</label>
+                            <input value={selectedPublicFolder} onChange={e => setSelectedPublicFolder(e.target.value)} className="input-field text-xs mt-1" />
                           </div>
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-ink-secondary mb-2">Folder Path</label>
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setShowPublicFolderDropdown(!showPublicFolderDropdown)}
-                              className="w-full flex items-center justify-between input-field"
-                            >
-                              <span className="text-ink-primary flex items-center gap-2">
-                                <IconFolder className="w-4 h-4" />
-                                {selectedPublicFolder || '/'}
-                              </span>
-                              <IconChevron className="w-4 h-4 text-ink-muted" />
-                            </button>
-                            {showPublicFolderDropdown && (
-                              <div className="absolute z-50 w-full mt-1 bg-bg-surface border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                <button
-                                  onClick={() => handlePublicFolderSelect({ path: '/' })}
-                                  className={`w-full text-left px-4 py-2 hover:bg-bg-primary flex items-center gap-2 ${selectedPublicFolder === '/' ? 'bg-accent/10' : ''}`}
-                                >
-                                  <IconFolder className="w-4 h-4" /> / (root)
-                                </button>
-                                {loadingPublicFolders ? (
-                                  <div className="px-4 py-2 text-ink-muted text-sm">Loading folders...</div>
-                                ) : (
-                                  publicFolders.filter(f => f.type === 'tree').map(folder => (
-                                    <button
-                                      key={folder.path}
-                                      onClick={() => handlePublicFolderSelect(folder)}
-                                      className={`w-full text-left px-4 py-2 hover:bg-bg-primary flex items-center gap-2 ${selectedPublicFolder === folder.path ? 'bg-accent/10' : ''}`}
-                                    >
-                                      <IconFolder className="w-4 h-4 text-ink-muted" />
-                                      <span className="text-ink-primary text-sm">{folder.path}</span>
-                                    </button>
-                                  ))
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </>
+                      </div>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
-              {!selectedRepo && githubConnected && (
-                <button onClick={fetchRepos} className="flex items-center gap-2 text-accent hover:text-accent/80 text-sm">
-                  <IconRefresh className="w-4 h-4" /> Refresh repositories
-                </button>
-              )}
             </div>
           )}
 
-          {/* Submit */}
           {!loading && (
-            <button id="generate-btn" onClick={handleSubmit} className="btn-accent w-full py-4 text-base mt-8 shadow-glow">
-              {active === 'git' ? (githubConnected ? 'Import & Generate →' : 'Fetch & Generate →') : 'Upload & Generate →'}
+            <button id="generate-btn" onClick={handleSubmit} className="btn-accent w-full py-4 text-xs font-mono uppercase tracking-widest shadow-md">
+              EXECUTE_COMPILER()
             </button>
           )}
 
-          {/* Progress */}
           {loading && (
-            <div className="mt-8">
+            <div className="mt-6">
               <StepIndicator steps={steps} />
             </div>
           )}
-        </div>
-      </div>
+        </section>
+
+        {/* Right Side: Simulated Active Manifest Visualizer */}
+        <section className="w-full lg:w-96 flex-shrink-0 flex flex-col">
+          <div className="glass-card bg-code border border-border rounded-xl flex-1 flex flex-col overflow-hidden shadow-2xl h-[480px]">
+            <div className="bg-bg-surface px-4 py-2.5 border-b border-border flex items-center justify-between">
+              <span className="text-[10px] font-mono text-ink-secondary uppercase tracking-widest flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-accent" /> pydoc_compilation_manifest.json
+              </span>
+              <span className="text-[10px] font-mono text-ink-muted">JSON</span>
+            </div>
+            <pre className="p-4 font-mono text-xs text-accent-blue overflow-auto flex-1 leading-relaxed">
+              <code>{liveManifestJSON}</code>
+            </pre>
+          </div>
+        </section>
+
+      </main>
     </div>
   )
 }

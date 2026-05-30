@@ -92,6 +92,9 @@ class ChangePasswordView(APIView):
 class UserListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class   = UserSerializer
+    search_fields = ['email', 'name', 'username']
+    filterset_fields = ['role', 'is_verified', 'is_active']
+    ordering_fields = ['created_at', 'email', 'name']
 
     def get_serializer_class(self):
         if self.request.user.is_admin:
