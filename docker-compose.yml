@@ -33,7 +33,7 @@ services:
         context: ./backend
         dockerfile: Dockerfile
       restart: always
-      command: ["./entrypoint.sh"]
+      command: ["bash", "entrypoint.sh"]
       volumes:
         - ./backend:/app
         - static_volume:/app/staticfiles
