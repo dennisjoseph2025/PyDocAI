@@ -55,9 +55,16 @@ AWS_QUERYSTRING_AUTH = False
 AWS_S3_VERIFY = True
 
 if AWS_STORAGE_BUCKET_NAME:
+    STORAGES = {
+        "default": {
+            "BACKEND": "config.storage_backends.MediaStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3.S3StaticStorage",
+        },
+    }
     STATICFILES_STORAGE = 'storages.backends.s3.S3StaticStorage'
     DEFAULT_FILE_STORAGE = 'config.storage_backends.MediaStorage'
-
     cloudfront_domain = config('AWS_CLOUDFRONT_DOMAIN', default=None)
     if cloudfront_domain:
         STATIC_URL = f'https://{cloudfront_domain}/static/'
