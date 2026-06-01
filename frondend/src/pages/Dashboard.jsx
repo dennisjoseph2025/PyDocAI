@@ -128,16 +128,11 @@ export default function Dashboard() {
                 <IconEdit className="w-4 h-4" /> Edit Profile
               </Link>
 
-              {/* REGULAR USER FEEDBACK LINKS (Hidden from Admins) */}
+              {/* UNIFIED FEEDBACK HUB (Hidden from Admins) */}
               {!(user?.role === 'admin' || user?.is_staff) && (
-                <>
-                  <Link to="/feedback" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
-                    <IconEdit className="w-4 h-4" /> Feedback
-                  </Link>
-                  <Link to="/my-feedback" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
-                    <IconEdit className="w-4 h-4" /> My Feedback
-                  </Link>
-                </>
+                <Link to="/feedback" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
+                  <IconEdit className="w-4 h-4" /> Feedback
+                </Link>
               )}
 
               {/* ADMIN DASHBOARD BUTTON */}
@@ -241,8 +236,8 @@ export default function Dashboard() {
                       <div>
                         <div className="flex items-start justify-between mb-3">
                           <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${project.source_type === 'github' ? 'text-success border-success/30 bg-success/5' :
-                              project.source_type === 'folder' ? 'text-warning border-warning/30 bg-warning/5' :
-                                'text-accent-blue border-accent-blue/30 bg-accent-blue/5'
+                            project.source_type === 'folder' ? 'text-warning border-warning/30 bg-warning/5' :
+                              'text-accent-blue border-accent-blue/30 bg-accent-blue/5'
                             }`}>
                             {project.source_type || 'files'}
                           </span>
