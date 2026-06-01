@@ -123,16 +123,23 @@ export default function Dashboard() {
               <Link to="/input" className="btn-accent flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
                 + New Generation
               </Link>
+
               <Link to="/profile" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
                 <IconEdit className="w-4 h-4" /> Edit Profile
               </Link>
-              <Link to="/feedback" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
-                <IconEdit className="w-4 h-4" /> Feedback
-              </Link>
-              <Link to="/my-feedback" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
-                <IconEdit className="w-4 h-4" /> My Feedback
-              </Link>
-              
+
+              {/* REGULAR USER FEEDBACK LINKS (Hidden from Admins) */}
+              {!(user?.role === 'admin' || user?.is_staff) && (
+                <>
+                  <Link to="/feedback" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
+                    <IconEdit className="w-4 h-4" /> Feedback
+                  </Link>
+                  <Link to="/my-feedback" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
+                    <IconEdit className="w-4 h-4" /> My Feedback
+                  </Link>
+                </>
+              )}
+
               {/* ADMIN DASHBOARD BUTTON */}
               {(user?.role === 'admin' || user?.is_staff) && (
                 <Link to="/admin/stats" className="btn-ghost !border-accent-blue/30 !text-accent-blue hover:!border-accent-blue hover:!bg-accent-blue/5 flex items-center justify-center gap-2 !py-2.5 text-sm w-full transition-all">
@@ -233,11 +240,10 @@ export default function Dashboard() {
                     >
                       <div>
                         <div className="flex items-start justify-between mb-3">
-                          <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${
-                            project.source_type === 'github' ? 'text-success border-success/30 bg-success/5' :
-                            project.source_type === 'folder' ? 'text-warning border-warning/30 bg-warning/5' :
-                            'text-accent-blue border-accent-blue/30 bg-accent-blue/5'
-                          }`}>
+                          <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${project.source_type === 'github' ? 'text-success border-success/30 bg-success/5' :
+                              project.source_type === 'folder' ? 'text-warning border-warning/30 bg-warning/5' :
+                                'text-accent-blue border-accent-blue/30 bg-accent-blue/5'
+                            }`}>
                             {project.source_type || 'files'}
                           </span>
 
