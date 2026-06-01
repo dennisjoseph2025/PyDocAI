@@ -69,6 +69,11 @@ jobs:
             set -e
             cd ~/PyDocAI
             git pull origin main
+            export DB_HOST=${{ secrets.RDS_HOST }}
+            export DB_PORT=5432
+            export DB_NAME=pydocai
+            export DB_USER=pydocai_user
+            export DB_PASSWORD=${{ secrets.RDS_PASSWORD }}
             docker compose -f docker-compose.prod.yml down --remove-orphans
             docker compose -f docker-compose.prod.yml pull backend
             docker compose -f docker-compose.prod.yml up -d --build
