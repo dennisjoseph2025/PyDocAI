@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FeedbackModal from '../components/FeedbackModal';
-import MyFeedbackView from '../components/MyFeedbackView'; // Refactored from your file
+import MyFeedbackView from './MyFeedback'; // Refactored from your file
 
 export default function FeedbackPage() {
   const [activeTab, setActiveTab] = useState('give'); // 'give' or 'history'
