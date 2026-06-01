@@ -51,13 +51,12 @@ AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default=None)
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1')
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
-AWS_LOCATION = 'media'
 AWS_QUERYSTRING_AUTH = False
 AWS_S3_VERIFY = True
 
 if AWS_STORAGE_BUCKET_NAME:
     STATICFILES_STORAGE = 'storages.backends.s3.S3StaticStorage'
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
+    DEFAULT_FILE_STORAGE = 'config.storage_backends.MediaStorage'
 
     cloudfront_domain = config('AWS_CLOUDFRONT_DOMAIN', default=None)
     if cloudfront_domain:
