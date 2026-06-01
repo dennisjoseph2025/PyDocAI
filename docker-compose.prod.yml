@@ -1,16 +1,4 @@
-
 services:
-  redis:
-    image: redis:7-alpine
-    restart: always
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
   backend:
       build:
         context: ./backend
@@ -28,9 +16,6 @@ services:
         DJANGO_SETTINGS_MODULE: config.settings.production
         UV_LINK_MODE: copy
         UV_PROJECT_ENVIRONMENT: /opt/venv
-      depends_on:
-        redis:
-          condition: service_healthy
 
   celery:
     build:
@@ -44,9 +29,6 @@ services:
       - ./backend/.env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
-    depends_on:
-      redis:
-        condition: service_healthy
 
   celery-beat:
     build:
@@ -60,9 +42,6 @@ services:
       - ./backend/.env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
-    depends_on:
-      redis:
-        condition: service_healthy
 
   pgbouncer:
     image: edoburu/pgbouncer:latest
@@ -71,11 +50,9 @@ services:
       - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       - POOL_MODE=transaction
       - MAX_DB_CONNECTIONS=20
+      - AUTH_TYPE=scram-sha-256
     ports:
       - "6432:5432"
-    depends_on:
-      redis:
-        condition: service_healthy
 
 volumes:
   static_volume:
