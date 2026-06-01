@@ -49,7 +49,7 @@ export default function MyFeedbackView() {
       if (filterCategory) params.category = filterCategory
       if (filterResolved) params.is_resolved = filterResolved
 
-    ) const res = await getMyFeedback(params)
+      const res = await getMyFeedback(params)
       const data = res.data || {}
       setFeedbacks(data.results || [])
       setTotalCount(data.count || 0)
