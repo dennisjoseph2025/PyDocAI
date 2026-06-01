@@ -126,6 +126,12 @@ export default function Dashboard() {
               <Link to="/profile" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
                 <IconEdit className="w-4 h-4" /> Edit Profile
               </Link>
+              <Link to="/feedback" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
+                <IconEdit className="w-4 h-4" /> Feedback
+              </Link>
+              <Link to="/my-feedback" className="btn-ghost flex items-center justify-center gap-2 !py-2.5 text-sm w-full">
+                <IconEdit className="w-4 h-4" /> My Feedback
+              </Link>
               
               {/* ADMIN DASHBOARD BUTTON */}
               {(user?.role === 'admin' || user?.is_staff) && (

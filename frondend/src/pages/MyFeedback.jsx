@@ -95,8 +95,8 @@ export default function MyFeedback() {
     <div className="min-h-screen bg-bg-primary">
       <header className="bg-bg-primary/80 backdrop-blur-xl sticky top-0 z-20 border-b border-border/0">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/profile" className="text-ink-secondary hover:text-ink-primary text-sm font-medium">
-            ← Back to Profile
+          <Link to="/dashboard" className="text-ink-secondary hover:text-ink-primary text-sm font-medium">
+            ← Back to Dashboard
           </Link>
           <h1 className="text-2xl font-display font-bold text-ink-primary">My Feedback</h1>
         </div>
