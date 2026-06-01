@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -22,7 +24,7 @@ api.interceptors.response.use(
       const refresh = localStorage.getItem('pydocai_refresh')
       if (refresh) {
         try {
-          const res = await axios.post('/api/users/token/refresh/', { refresh })
+          const res = await axios.post(`${API_BASE}/users/token/refresh/`, { refresh })
           const newToken = res.data.access
           localStorage.setItem('pydocai_token', newToken)
           originalRequest.headers.Authorization = `Bearer ${newToken}`
