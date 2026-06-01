@@ -56,8 +56,8 @@ AWS_QUERYSTRING_AUTH = False
 AWS_S3_VERIFY = True
 
 if AWS_STORAGE_BUCKET_NAME:
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STATICFILES_STORAGE = 'storages.backends.s3.S3StaticStorage'
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
 
     cloudfront_domain = config('AWS_CLOUDFRONT_DOMAIN', default=None)
     if cloudfront_domain:
