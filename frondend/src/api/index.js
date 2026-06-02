@@ -116,8 +116,8 @@ export function getPublicRepoInfo(url) {
   return api.get('/github/public-repo/info/', { params: { url } })
 }
 
-export function getPublicRepoFolders(url) {
-  return api.get('/github/public-repo/folders/', { params: { url } })
+export function getPublicRepoFolders(fullName, branch) {
+  return api.get('/github/public-repo/folders/', { params: { full_name: fullName, branch } })
 }
 
 export function importPublicRepo(data) {

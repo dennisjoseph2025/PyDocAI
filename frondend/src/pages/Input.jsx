@@ -106,7 +106,7 @@ export default function Input() {
     if (!publicRepoUrl.trim()) return
     setLoadingPublicRepo(true)
     try {
-      const res = await getPublicRepoInfo({ url: publicRepoUrl })
+      const res = await getPublicRepoInfo(publicRepoUrl)
       setPublicRepoInfo(res.data)
       setSelectedPublicBranch(res.data.default_branch || 'main')
       fetchPublicFolders(res.data.full_name, res.data.default_branch)
@@ -120,7 +120,7 @@ export default function Input() {
   const fetchPublicFolders = async (fullName, branch) => {
     setLoadingPublicFolders(true)
     try {
-      const res = await getPublicRepoFolders({ full_name: fullName, branch })
+      const res = await getPublicRepoFolders(fullName, branch)
       setPublicFolders(res.data || [])
     } catch (err) {
       addToast('Failed to load folders', 'error')
