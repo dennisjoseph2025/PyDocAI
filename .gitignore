@@ -11,3 +11,4 @@ media/
 .DS_Store
 *.egg-info/
 PyDocAI_Backend.postman_collection.json
+backend/seed_admin.py
