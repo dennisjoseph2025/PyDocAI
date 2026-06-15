@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { adminListUsers } from '../api'
 import useAuth from '../hooks/useAuth'
 import AdminLayout from '../components/AdminLayout'
@@ -66,6 +67,10 @@ export default function AdminUsers() {
 
   return (
     <AdminLayout>
+      <Helmet>
+        <title>Admin Users — PyDocAI</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-display font-bold text-ink-primary">Users</h1>

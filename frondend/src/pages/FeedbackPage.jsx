@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FeedbackModal from '../components/FeedbackModal';
@@ -10,6 +11,11 @@ export default function FeedbackPage() {
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
+      <Helmet>
+        <title>Feedback — PyDocAI</title>
+        <meta name="description" content="Submit feedback about PyDocAI's documentation quality, UI/UX, performance, or request new features." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <Navbar />
       
       <header className="bg-bg-primary/80 backdrop-blur-xl border-b border-border/40 sticky top-0 z-20">

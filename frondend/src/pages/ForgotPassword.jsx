@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
+import { Helmet } from "react-helmet-async"
 import api from "../api"
 import { IconMail, IconCheck } from "../components/Icons"
 import LoadingSpinner from "../components/LoadingSpinner"
@@ -45,6 +46,11 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4 relative z-10">
+      <Helmet>
+        <title>Forgot Password — PyDocAI</title>
+        <meta name="description" content="Reset your PyDocAI account password. Enter your email to receive password reset instructions." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <div className="absolute inset-0 bg-radial-glow pointer-events-none" />
       <div className="glass-card w-full max-w-md p-10 animate-fade-in relative z-10">
         <div className="text-center mb-8">

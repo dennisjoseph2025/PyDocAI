@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -53,6 +54,20 @@ const sampleFields = [
 
 const techBadges = ['Django', 'DRF', 'Python 3.x', 'REST APIs', 'Models', 'Serializers', 'Views', 'URLs']
 
+const siteUrl = 'https://pydocai.vercel.app'
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'PyDocAI',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  description: 'AI-powered documentation generator for Python and Django projects. Upload code or connect a Git repo to generate beautiful, comprehensive documentation automatically.',
+  url: siteUrl,
+  author: { '@type': 'Organization', name: 'PyDocAI' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+}
+
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth()
 
@@ -60,6 +75,17 @@ export default function Home() {
 
   return (
     <div className="relative z-10 flex flex-col bg-bg-primary">
+      <Helmet>
+        <title>PyDocAI — AI-Powered Python Documentation Generator</title>
+        <meta name="description" content="Upload your Django project and let AI produce beautiful, comprehensive docs — models, views, endpoints, and more. Free AI documentation generator for Python." />
+        <link rel="canonical" href={siteUrl} />
+        <meta property="og:title" content="PyDocAI — AI-Powered Python Documentation Generator" />
+        <meta property="og:description" content="Upload your Django project and let AI produce beautiful, comprehensive docs — models, views, endpoints, and more." />
+        <meta property="og:url" content={siteUrl} />
+        <meta name="twitter:title" content="PyDocAI — AI-Powered Python Documentation Generator" />
+        <meta name="twitter:description" content="Upload your Django project and let AI produce beautiful, comprehensive docs — models, views, endpoints, and more." />
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
       <Navbar />
 
       {/* --- HERO SECTION (Original Soft/Rounded Design) --- */}

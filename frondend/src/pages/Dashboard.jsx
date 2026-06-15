@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { getProjects, deleteProject } from '../api'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
@@ -16,6 +17,8 @@ const PAGE_SIZE = 10
 
 export default function Dashboard() {
   const { user, addToast } = useAuth()
+
+  const pageTitle = `${user?.name || 'My Projects'} — PyDocAI`
 
   const [projects, setProjects] = useState([])
   const [stats, setStats] = useState(null)
@@ -102,6 +105,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content="View and manage your PyDocAI documentation projects. Search, filter, and organize your generated docs." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <Navbar />
 
       <div className="flex-1 max-w-[1400px] w-full mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">

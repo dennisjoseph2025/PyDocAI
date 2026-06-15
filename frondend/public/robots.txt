@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /dashboard
+Disallow: /input
+Disallow: /output/
+Disallow: /profile
+Disallow: /feedback
+Disallow: /admin/
+
+Sitemap: https://pydocai.vercel.app/sitemap.xml

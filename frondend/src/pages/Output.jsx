@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
@@ -326,7 +327,12 @@ export default function Output() {
   const isDone = project.status === 'done'
 
   return (
-    <div className="relative z-10 h-screen bg-bg-primary overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-bg-primary flex flex-col">
+      <Helmet>
+        <title>{project?.name ? `${project.name} — PyDocAI` : 'Documentation — PyDocAI'}</title>
+        <meta name="description" content={project?.description ? `AI-generated documentation for ${project.name}: ${project.description}` : 'View your AI-generated Python project documentation.'} />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden">

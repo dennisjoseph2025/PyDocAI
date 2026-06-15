@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { registerUser } from '../api'
 import useAuth from '../hooks/useAuth'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -76,6 +77,11 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4 relative z-10">
+      <Helmet>
+        <title>Create Account — PyDocAI</title>
+        <meta name="description" content="Create a free PyDocAI account and start generating AI-powered documentation for your Python and Django projects instantly." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <div className="absolute inset-0 bg-radial-glow pointer-events-none" />
       <div className="glass-card w-full max-w-md p-10 animate-fade-in relative z-10">
         <div className="text-center mb-8">

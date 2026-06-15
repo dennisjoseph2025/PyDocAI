@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { githubAuth } from '../api'
 import useAuth from '../hooks/useAuth'
 
@@ -58,6 +59,10 @@ export default function GitHubCallback() {
         </div>
       </div>
 
+      <Helmet>
+        <title>Authenticating — PyDocAI</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <p className="text-ink-primary font-display font-semibold text-lg">
         Connecting with GitHub…
       </p>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { getAllFeedback, resolveFeedback, createFeedbackReply } from '../api'
 import useAuth from '../hooks/useAuth'
 import AdminLayout from '../components/AdminLayout'
@@ -118,6 +119,10 @@ export default function AdminFeedback() {
 
   return (
     <AdminLayout>
+      <Helmet>
+        <title>Admin Feedback — PyDocAI</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold text-ink-primary">Feedback</h1>
         <p className="text-ink-secondary mt-1">Review and respond to user feedback</p>

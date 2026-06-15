@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { getProjects, updateProfile, changePassword } from '../api'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
@@ -48,6 +49,11 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
+      <Helmet>
+        <title>Profile Settings — PyDocAI</title>
+        <meta name="description" content="Manage your PyDocAI account settings, update your profile, and change your password." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <Navbar />
       <main className="flex-1 max-w-[1000px] w-full mx-auto px-6 py-10 flex flex-col md:flex-row gap-8">
         

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { getAllProjects } from '../api'
 import useAuth from '../hooks/useAuth'
 import AdminLayout from '../components/AdminLayout'
@@ -68,6 +69,10 @@ export default function AdminProjects() {
 
   return (
     <AdminLayout>
+      <Helmet>
+        <title>Admin Dashboard — PyDocAI</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold text-ink-primary">
           All Projects

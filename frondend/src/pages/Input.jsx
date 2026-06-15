@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { analyzeFile, analyzeFolder, importFromGithub, getGithubRepos, getGithubRepoFolders, getPublicRepoInfo, getPublicRepoFolders, importPublicRepo } from '../api'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
