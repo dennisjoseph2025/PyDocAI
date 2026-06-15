@@ -1,25 +1,59 @@
-# PyDocAi
+<div align="center">
 
-AI-powered documentation generator.
+# PyDocAI
 
-## Quick Start with Docker
+### AI-Powered Python Documentation Generator
 
-### Development
-```bash
-docker-compose -f docker-compose.dev.yml up --build
-```
-- Backend: http://localhost:8000
-- Frontend: http://localhost:3000
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/dennisjoseph2025/PyDocAI?style=social)](https://github.com/dennisjoseph2025/PyDocAI/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/dennisjoseph2025/PyDocAI?style=social)](https://github.com/dennisjoseph2025/PyDocAI/network/members)
+[![Vercel](https://img.shields.io/badge/deployed%20on-Vercel-black?logo=vercel)](https://pydocai.vercel.app)
+[![Django](https://img.shields.io/badge/backend-Django-092E20?logo=django)](https://www.djangoproject.com/)
+[![React](https://img.shields.io/badge/frontend-React-61DAFB?logo=react)](https://react.dev/)
 
-### Production
+**Upload your Python/Django code and let AI generate beautiful, comprehensive documentation in seconds.**
+
+[🌐 Live Demo](https://pydocai.vercel.app) · [🐛 Report Bug](https://github.com/dennisjoseph2025/PyDocAI/issues) · [✨ Feature Request](https://github.com/dennisjoseph2025/PyDocAI/issues)
+
+---
+
+</div>
+
+## Features
+
+- **🤖 AI-Powered Documentation** — Parses your code with Python AST and generates human-readable docs using Groq AI (with Gemini/Claude fallbacks)
+- **📁 Multiple Input Methods** — Upload single `.py` files, `.zip` archives, or connect a GitHub repository
+- **📊 Schema Generation** — Auto-compiled tables detailing database models, field types, constraints, and relationships
+- **🔗 Endpoint Mapping** — Automated REST API documentation with HTTP methods, path parameters, and JSON responses
+- **📝 Markdown Export** — Export documentation as clean Markdown, compatible with GitHub, GitLab, and VS Code
+- **🔐 User Authentication** — JWT-based auth with GitHub OAuth, email/password registration, password reset
+- **📱 Responsive Design** — Dark-themed UI built with React 19, Tailwind CSS, and a cyberpunk/IDE aesthetic
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 19, Vite, TypeScript, Tailwind CSS, React Router |
+| **Backend** | Django 5, Django REST Framework, Celery, Redis |
+| **Database** | PostgreSQL |
+| **AI** | Groq API (LLaMA), Gemini/Claude fallbacks |
+| **Deployment** | Vercel (frontend), AWS EC2 + RDS + ElastiCache (backend) |
+
+## Quick Start
+
+### With Docker
+
 ```bash
 docker-compose up --build -d
 ```
-- App: http://localhost:80
 
-## Without Docker
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
 
-### Backend
+### Without Docker
+
+**Backend:**
+
 ```bash
 cd backend
 uv venv
@@ -27,19 +61,91 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-### Frontend
+**Frontend:**
+
 ```bash
-cd frontend
+cd frondend
 npm install
 npm run dev
 ```
 
-## Services
-| Service      | Port  | Description          |
-|-------------|-------|----------------------|
-| backend     | 8000  | Django REST API      |
-| frontend    | 3000  | React + Vite         |
-| db          | 5432  | PostgreSQL           |
-| redis       | 6379  | Celery broker        |
-| celery      | -     | Task worker          |
-| celery-beat | -     | Scheduled tasks      |
+## How It Works
+
+```
+1. Upload Code ──▶ 2. AST Parsing ──▶ 3. AI Generation ──▶ 4. Beautiful Docs
+     │                    │                   │                    │
+  .py / .zip          Python AST          Groq LLM           Markdown + UI
+  GitHub repo        extracts types      writes docs         preview + export
+```
+
+## Project Structure
+
+```
+PyDocAi/
+├── backend/                    # Django REST API
+│   ├── apps/
+│   │   ├── users/             # Auth & user management
+│   │   ├── projects/          # Project CRUD
+│   │   ├── parser/            # Python AST parsing
+│   │   ├── ai/               # AI documentation generation
+│   │   ├── github_integration/# GitHub OAuth & repo fetching
+│   │   └── exports/          # Markdown export
+│   ├── config/               # Django settings
+│   └── requirements/
+├── frondend/                  # React + Vite frontend
+│   └── src/
+│       ├── pages/            # Route pages
+│       ├── components/       # Reusable components
+│       └── context/          # Auth context
+├── docker-compose.yml
+└── README.md
+```
+
+## API Overview
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/register/` | POST | Register new user |
+| `/api/auth/login/` | POST | Login (JWT) |
+| `/api/projects/` | GET | List projects |
+| `/api/projects/` | POST | Create project |
+| `/api/parser/analyze-file/` | POST | Analyze single `.py` file |
+| `/api/parser/analyze-folder/` | POST | Analyze ZIP folder |
+| `/api/exports/markdown/{id}/` | GET | Export as Markdown |
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `DJANGO_SECRET_KEY` | Django secret key |
+| `DATABASE_URL` | PostgreSQL connection |
+| `REDIS_URL` | Redis connection |
+| `GROQ_API_KEY` | Groq AI API key |
+
+---
+
+## Contributing
+
+We welcome all contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+**Ways to help:**
+- 🐛 Report bugs via [GitHub Issues](https://github.com/dennisjoseph2025/PyDocAI/issues)
+- 💡 Suggest features
+- 🔧 Submit pull requests
+- ⭐ Star the repo to show support
+
+## License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+---
+
+<div align="center">
+
+### ⭐ If you find this project useful, give it a star! ⭐
+
+[![GitHub stars](https://img.shields.io/github/stars/dennisjoseph2025/PyDocAI?style=for-the-badge&logo=github)](https://github.com/dennisjoseph2025/PyDocAI/stargazers)
+
+Built with ❤️ for the Python community
+
+</div>
