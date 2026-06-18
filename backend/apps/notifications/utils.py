@@ -73,7 +73,6 @@ def notify_reply(comment):
     project = comment.project
     replier = comment.user.name or comment.user.email
     snippet = _snippet(comment.content)
-    parent_snippet = _snippet(parent.content)
     message = f'{replier} replied to your comment on "{project.name}": "{snippet}"'
     Notification.objects.create(user=parent.user, comment=comment, message=message)
 

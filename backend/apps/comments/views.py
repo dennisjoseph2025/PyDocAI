@@ -4,10 +4,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.notifications.utils import notify_comment, notify_reply
+from apps.projects.models import Project
+
 from .models import Comment
 from .serializers import CommentCreateSerializer, CommentSerializer
 from .throttles import CommentRateThrottle
-from apps.projects.models import Project
 
 
 class CommentListView(APIView):

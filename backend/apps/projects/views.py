@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.db import connection
 from django.db.models import Count
 from rest_framework import generics, permissions, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -111,9 +112,6 @@ class PublishProjectView(APIView):
         project.save(update_fields=["is_published", "published_description", "updated_at"])
         cache.delete(f'project_stats_{request.user.id}')
         return Response(ProjectSerializer(project).data)
-
-
-from rest_framework.pagination import PageNumberPagination
 
 
 class NoPagination(PageNumberPagination):
