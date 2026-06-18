@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Refresh token if it's about to expire (within 60 seconds)
+  // Refresh token if it's about to expire (within 5 minutes)
   const refreshIfNeeded = useCallback(async () => {
     if (!token) return
 
@@ -49,25 +49,27 @@ export function AuthProvider({ children }) {
     if (!decoded || !decoded.exp) return
 
     const now = Math.floor(Date.now() / 1000)
-    // Refresh if token expires in 60 seconds or less
-    if (decoded.exp - now <= 60) {
+    // Refresh if token expires in 5 minutes or less
+    if (decoded.exp - now <= 300) {
       try {
         const response = await refreshToken(refreshTokenValue)
-        // Update only the access token (refresh token remains same unless rotated)
         localStorage.setItem('pydocai_token', response.data.access)
         setToken(response.data.access)
-        // Optionally update user data if needed
-        const userData = localStorage.getItem('pydocai_user')
-        if (userData) {
-          const parsedUser = JSON.parse(userData)
-          // We don't have new user data from refresh, so we keep existing
-          // setUser(parsedUser) // Only update if we got new user data
+        // Save rotated refresh token if returned
+        if (response.data.refresh) {
+          localStorage.setItem('pydocai_refresh', response.data.refresh)
+          setRefreshTokenValue(response.data.refresh)
         }
         return true
       } catch (error) {
         console.error('Token refresh failed:', error)
-        // If refresh fails, log out
-        logout()
+        // Clear tokens without calling logout() to avoid circular deps
+        localStorage.removeItem('pydocai_token')
+        localStorage.removeItem('pydocai_refresh')
+        setToken(null)
+        setRefreshTokenValue(null)
+        setUser(null)
+        window.location.href = '/login'
         return false
       }
     }

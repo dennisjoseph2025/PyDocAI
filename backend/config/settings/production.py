@@ -42,6 +42,9 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = [
 REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
     'anon': '100/day',
     'user': '1000/hour',
+    'comment_create': '20/hour',
+    'publish': '10/hour',
+    'public': '100/hour',
 }
 
 # ── S3 STATIC & MEDIA FILES ──────────────────────────────────

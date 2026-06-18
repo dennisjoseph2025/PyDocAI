@@ -12,3 +12,9 @@ media/
 *.egg-info/
 PyDocAI_Backend.postman_collection.json
 backend/seed_admin.py
+backend/celerybeat-schedule.db
+backend/check.py
+*.db
+frondend/call_mcp.js
+ARCHITECTURE.md
+social-posts.md

@@ -19,6 +19,7 @@ dependencies = [
     "python-decouple>=3.8",
     "python-dotenv>=1.2.2",
     "redis>=7.4.0",
+    "requests>=2.31.0",
     "gunicorn>=23.0.0",
     "gevent>=24.10.1",
     "weasyprint>=68.1",
@@ -49,12 +50,11 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+ignore = ["E501", "SIM102"]
 
 [tool.ruff.lint.per-file-ignores]
 "*/migrations/*" = ["E501"]
-"apps/ai/prompts.py" = ["E501"]
-"apps/ai/generator.py" = ["E501"]
-"apps/ai/project_docs.py" = ["E501", "E722", "SIM102", "SIM108", "B007", "F841"]
+"apps/universal/prompts.py" = ["E501"]
 "config/settings/*" = ["F403", "F405", "E402"]
 "apps/github_integration/tasks.py" = ["SIM105", "B904"]
 "apps/exports/views.py" = ["B904"]

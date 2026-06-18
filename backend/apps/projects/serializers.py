@@ -17,10 +17,15 @@ class ProjectSerializer(serializers.ModelSerializer):
             'id', 'user', 'name', 'description', 'status', 'source_type',
             'file_name', 'file_size', 'github_url',
             'github_branch', 'parsed_data', 'generated_docs', 'readme_docs',
-            'api_docs', 'project_info', 'custom_details', 'error_message', 'created_at', 'updated_at', 'files'
+            'api_docs', 'project_info', 'custom_details', 'framework_info', 'error_message',
+            'is_published', 'public_slug', 'published_description',
+            'created_at', 'updated_at', 'files',
         ]
-        read_only_fields = ['user', 'status', 'parsed_data', 'generated_docs',
-                          'readme_docs', 'api_docs', 'project_info', 'error_message']
+        read_only_fields = [
+            'user', 'status', 'parsed_data', 'generated_docs',
+            'readme_docs', 'api_docs', 'project_info', 'error_message',
+            'public_slug',
+        ]
 
 class ProjectListSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.name', read_only=True)
@@ -31,5 +36,32 @@ class ProjectListSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'id', 'name', 'description', 'status', 'source_type',
-            'created_at', 'updated_at', 'user_name', 'user_email', 'file_count',
+            'is_published', 'public_slug', 'published_description',
+            'created_at', 'updated_at', 'user_name', 'user_email', 'file_count', 'framework_info',
+        ]
+
+class PublicProjectSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    file_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Project
+        fields = [
+            'id', 'name', 'description', 'published_description',
+            'generated_docs', 'readme_docs', 'api_docs',
+            'user_name', 'file_count', 'public_slug', 'source_type',
+            'github_url', 'github_branch',
+            'created_at', 'updated_at',
+        ]
+
+class PublicProjectListSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    file_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Project
+        fields = [
+            'id', 'name', 'description', 'published_description',
+            'user_name', 'file_count', 'public_slug', 'source_type',
+            'created_at', 'updated_at',
         ]

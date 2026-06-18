@@ -1,0 +1,168 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - django-core
+      - fastapi-parser
+      - fastapi-ai
+    networks:
+      - pydocai-v2
+
+  django-core:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    command: ["bash", "entrypoint.sh"]
+    volumes:
+      - ./backend:/app
+      - static_volume:/app/staticfiles
+    env_file:
+      - ./backend/.env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      UV_LINK_MODE: copy
+      UV_PROJECT_ENVIRONMENT: /opt/venv
+      INTERNAL_API_KEY: pydocai-internal-key
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pydocai-v2
+
+  fastapi-parser:
+    build:
+      context: ./backend/services/parser
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://pydocai_user:pydocai_pass@db:5432/pydocai
+      INTERNAL_API_KEY: pydocai-internal-key
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pydocai-v2
+    ports:
+      - "8002:8002"
+
+  fastapi-ai:
+    build:
+      context: ./backend/services/ai
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://pydocai_user:pydocai_pass@db:5432/pydocai
+      INTERNAL_API_KEY: pydocai-internal-key
+      EMBEDDING_MODEL: all-MiniLM-L6-v2
+    volumes:
+      - model_cache:/root/.cache/huggingface
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pydocai-v2
+    ports:
+      - "8003:8003"
+
+  db:
+    image: pgvector/pgvector:pg16
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: pydocai
+      POSTGRES_USER: pydocai_user
+      POSTGRES_PASSWORD: pydocai_pass
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pydocai_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pydocai-v2
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - pydocai-v2
+
+  celery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    command: uv run celery -A config.celery worker --loglevel=info --concurrency=4 --max-tasks-per-child=10 --max-memory-per-child=500000
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      UV_PROJECT_ENVIRONMENT: /opt/venv
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - pydocai-v2
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    command: uv run celery -A config.celery beat --loglevel=info
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      UV_PROJECT_ENVIRONMENT: /opt/venv
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - pydocai-v2
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    restart: always
+    environment:
+      - DATABASE_URL=postgres://pydocai_user:pydocai_pass@db:5432/pydocai
+      - POOL_MODE=transaction
+      - MAX_DB_CONNECTIONS=20
+    ports:
+      - "6432:5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pydocai-v2
+
+networks:
+  pydocai-v2:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  static_volume:
+  model_cache:
