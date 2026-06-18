@@ -185,7 +185,7 @@ function VsCodeMarkdown({ markdown }) {
             }
 
             return (
-              <div className="my-4 rounded-xl overflow-hidden border border-border bg-code shadow-lg">
+              <div className="my-3 sm:my-4 rounded-xl overflow-hidden border border-border bg-code shadow-lg">
                 <div className="flex items-center justify-between bg-bg-surface px-3 sm:px-4 py-1.5 border-b border-border">
                   <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest">{lang || 'code'}</span>
                   <CopyButton text={codeStr} />
@@ -632,9 +632,9 @@ export default function Output() {
         <main className="flex-1 min-w-0 bg-code/20 flex flex-col overflow-y-auto relative">
           {isDone && (
             <div className="sticky top-0 z-20 bg-bg-surface/95 backdrop-blur border-b border-border flex items-center px-3 sm:px-4 py-2 font-mono text-xs shadow-sm">
-              <span className="text-ink-muted mr-2 hidden sm:inline">active_file:</span>
-              <span className="text-accent font-bold truncate">/{docTabs.find(t => t.id === activeTab)?.label || 'docs.md'}</span>
-              <span className="ml-auto text-[10px] text-ink-muted uppercase tracking-wider truncate max-w-[120px] sm:max-w-none">{project.name}</span>
+                  <span className="text-ink-muted mr-2 hidden sm:inline flex-shrink-0">active_file:</span>
+              <span className="text-accent font-bold truncate min-w-0">/{docTabs.find(t => t.id === activeTab)?.label || 'docs.md'}</span>
+              <span className="ml-auto text-[10px] text-ink-muted uppercase tracking-wider truncate max-w-[100px] sm:max-w-[180px]">{project.name}</span>
             </div>
           )}
 
@@ -644,6 +644,37 @@ export default function Output() {
             ) : (
               <div className="glass-card bg-code/40 border border-border rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl">
                 <VsCodeMarkdown markdown={normalizedContent} />
+              </div>
+            )}
+
+            {isDone && (
+              <div className="lg:hidden mt-6 sm:mt-8 flex flex-wrap items-center gap-2 p-3 sm:p-4 bg-bg-surface border border-border rounded-xl">
+                <button onClick={handleCopy} className="px-3 py-1.5 rounded-md text-[10px] font-mono bg-bg-elevated border border-border text-ink-secondary hover:text-ink-primary transition-colors">
+                  {copyLabel}
+                </button>
+                <button onClick={handleDownload} className="px-3 py-1.5 rounded-md text-[10px] font-mono bg-accent-blue/15 text-accent-blue border border-accent-blue/30 hover:bg-accent-blue/25 transition-colors">
+                  {isUniversal ? 'Download .md' : 'DOWNLOAD_FILE()'}
+                </button>
+                {isPythonMode && (
+                  <>
+                    <button
+                      onClick={handlePublishToggle}
+                      disabled={publishing}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-mono transition-colors ${
+                        project.is_published
+                          ? 'bg-success/10 text-success border border-success/30'
+                          : 'bg-bg-elevated text-ink-secondary border border-border hover:text-ink-primary'
+                      }`}
+                    >
+                      {publishing ? '...' : project.is_published ? 'Published' : 'Publish'}
+                    </button>
+                    {project.is_published && project.public_slug && (
+                      <button onClick={handleCopyShareLink} className="px-3 py-1.5 rounded-md text-[10px] font-mono text-accent-blue hover:text-accent transition-colors">
+                        {shareCopied ? 'Copied!' : 'Share link'}
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             )}
 
