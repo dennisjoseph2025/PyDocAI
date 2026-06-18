@@ -319,18 +319,18 @@ export default function PublicDoc() {
           </div>
         </div>
 
-        <div className="flex border-b border-border mb-6 overflow-x-auto">
+        <div className="flex flex-wrap border-b border-border mb-6">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-[10px] sm:text-xs font-mono transition-colors shrink-0 ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-mono transition-colors ${
                 activeTab === tab.id
                   ? 'border-b-2 border-accent-blue text-ink-primary'
                   : 'text-ink-muted hover:text-ink-primary border-b-2 border-transparent'
               }`}
             >
-              <tab.icon className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+              <tab.icon className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5" />
               {tab.label}
             </button>
           ))}
