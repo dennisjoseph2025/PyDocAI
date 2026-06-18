@@ -74,11 +74,20 @@ npm run dev
 
 ## How It Works
 
+### Python Mode (AST-powered)
 ```
 1. Upload Code ──▶ 2. AST Parsing ──▶ 3. AI Generation ──▶ 4. Beautiful Docs
      │                    │                   │                    │
   .py / .zip          Python AST          Groq LLM           Markdown + UI
   GitHub repo        extracts types      writes docs         preview + export
+```
+
+### Universal Mode (AI-direct)
+```
+1. Upload Code ──▶ 2. AI Analysis ──▶ 3. Structured Docs
+     │                    │                   │
+  any language         Groq LLM           Tabbed README /
+  (.py/.js/.ts/...)   analyzes code      API / Architecture
 ```
 
 ## Project Structure
@@ -91,16 +100,28 @@ PyDocAi/
 │   │   ├── projects/          # Project CRUD
 │   │   ├── parser/            # Python AST parsing
 │   │   ├── ai/               # AI documentation generation
+│   │   ├── universal/        # Universal code analysis
 │   │   ├── github_integration/# GitHub OAuth & repo fetching
-│   │   └── exports/          # Markdown export
+│   │   ├── exports/          # Markdown export
+│   │   ├── comments/         # Public doc comments
+│   │   ├── feedback/         # User feedback & ratings
+│   │   ├── admin_dashboard/  # Admin panel
+│   │   ├── notifications/    # User notifications
+│   │   └── internal/         # Internal utilities
+│   ├── services/
+│   │   ├── parser/           # FastAPI AST parsing service
+│   │   └── ai/               # FastAPI AI generation service
 │   ├── config/               # Django settings
 │   └── requirements/
 ├── frondend/                  # React + Vite frontend
 │   └── src/
-│       ├── pages/            # Route pages
-│       ├── components/       # Reusable components
-│       └── context/          # Auth context
+│       ├── pages/            # Route pages (19 pages)
+│       ├── components/       # Reusable UI components
+│       ├── hooks/            # Custom React hooks
+│       ├── context/          # Auth context
+│       └── api/              # API client
 ├── docker-compose.yml
+├── nginx/
 └── README.md
 ```
 
@@ -110,20 +131,57 @@ PyDocAi/
 |----------|--------|-------------|
 | `/api/auth/register/` | POST | Register new user |
 | `/api/auth/login/` | POST | Login (JWT) |
-| `/api/projects/` | GET | List projects |
-| `/api/projects/` | POST | Create project |
-| `/api/parser/analyze-file/` | POST | Analyze single `.py` file |
-| `/api/parser/analyze-folder/` | POST | Analyze ZIP folder |
+| `/api/auth/profile/` | GET/PUT | Get/update profile |
+| `/api/auth/password/reset/` | POST | Request password reset |
+| `/api/auth/github/login/` | POST | GitHub OAuth login |
+| `/api/projects/` | GET/POST | List / create projects |
+| `/api/projects/{id}/` | GET/PUT/DELETE | Project detail / update / delete |
+| `/api/projects/{id}/publish/` | POST | Toggle publish status |
+| `/api/parser/analyze-file/` | POST | Analyze single `.py` file (AST) |
+| `/api/parser/analyze-folder/` | POST | Analyze ZIP folder (AST) |
+| `/api/ai/generate/` | POST | Start AI documentation generation |
+| `/api/ai/status/{task_id}/` | GET | Poll generation status |
+| `/api/universal/analyze/` | POST | Analyze any code (universal mode) |
+| `/api/universal/status/{id}/` | GET | Poll universal analysis status |
+| `/api/github/repos/` | GET | List user's GitHub repos |
+| `/api/github/fetch/` | POST | Fetch repo contents |
 | `/api/exports/markdown/{id}/` | GET | Export as Markdown |
+| `/api/comments/` | GET/POST | List / create comments |
+| `/api/comments/{id}/` | DELETE | Delete comment |
+| `/api/feedback/` | GET/POST | List / submit feedback |
+| `/api/notifications/` | GET | List notifications |
+| `/api/public/projects/` | GET | List published projects |
+| `/api/public/projects/{slug}/` | GET | Get published project detail |
+| `/api/admin-dashboard/stats/` | GET | Admin dashboard stats |
 
 ## Environment Variables
+
+### Backend (`backend/.env`)
 
 | Variable | Description |
 |----------|-------------|
 | `DJANGO_SECRET_KEY` | Django secret key |
-| `DATABASE_URL` | PostgreSQL connection |
-| `REDIS_URL` | Redis connection |
-| `GROQ_API_KEY` | Groq AI API key |
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD` | PostgreSQL credentials |
+| `DB_HOST`, `DB_PORT` | PostgreSQL host and port |
+| `CELERY_BROKER_URL` | Redis URL for Celery broker |
+| `GROQ_API_KEY` | Primary Groq AI API key |
+| `GROQ_API_KEY_2` | Secondary Groq AI API key (fallback) |
+| `GITHUB_CLIENT_ID` | GitHub OAuth app client ID |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth app secret |
+| `GITHUB_API_TOKEN` | GitHub API token for repo fetching |
+| `EMAIL_HOST`, `EMAIL_PORT` | SMTP server settings |
+| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | SMTP credentials |
+| `FRONTEND_URL` | Frontend origin for CORS |
+| `CORS_ALLOWED_ORIGINS` | Allowed CORS origins |
+| `AWS_ACCESS_KEY_ID` | AWS S3 access key (production) |
+| `AWS_SECRET_ACCESS_KEY` | AWS S3 secret key (production) |
+| `AWS_STORAGE_BUCKET_NAME` | S3 bucket name (production) |
+
+### Frontend (`frondend/.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_GITHUB_CLIENT_ID` | GitHub OAuth client ID for frontend login |
 
 ---
 
