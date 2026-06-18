@@ -1,20 +1,20 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkGfm from 'remark-gfm'
 import mermaid from 'mermaid'
-import { getProjectDetail, publishProject } from '../api'
+import { getProjectDetail, publishProject, getUniversalStatus } from '../api'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
 import LoadingSpinner from '../components/LoadingSpinner'
 import CommentSection from '../components/CommentSection'
+import { getMode } from '../config/themes'
 import {
-  IconWarning, IconFile, IconX, IconBook, IconPuzzle,
-  IconDatabase, IconClipboard, IconCheck, IconDownload,
-  IconSparkles, IconArchive, IconSearch,
+  IconWarning, IconFile, IconBook, IconPuzzle,
+  IconDatabase, IconDownload,
 } from '../components/Icons'
 
 mermaid.initialize({
@@ -86,7 +86,7 @@ function normalizeMarkdown(text) {
 function MermaidDiagram({ chart }) {
   const [svgData, setSvgData] = useState('')
   const [error, setError] = useState(false)
-  
+
   useEffect(() => {
     let isMounted = true
     const renderChart = async () => {
@@ -95,13 +95,8 @@ function MermaidDiagram({ chart }) {
         const sanitized = sanitizeMermaid(chart)
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
         const { svg } = await mermaid.render(id, sanitized)
-        if (isMounted) {
-          setSvgData(svg)
-          setError(false)
-        }
-      } catch (err) {
-        if (isMounted) setError(true)
-      }
+        if (isMounted) { setSvgData(svg); setError(false) }
+      } catch { if (isMounted) setError(true) }
     }
     renderChart()
     return () => { isMounted = false }
@@ -117,9 +112,20 @@ function MermaidDiagram({ chart }) {
       </div>
     )
   }
+  return <div className="my-6 p-4 sm:p-6 bg-code border border-border rounded-xl flex justify-center overflow-x-auto" dangerouslySetInnerHTML={{ __html: svgData }} />
+}
 
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
   return (
-    <div className="my-6 p-6 bg-code border border-border rounded-xl flex justify-center overflow-x-auto" dangerouslySetInnerHTML={{ __html: svgData }} />
+    <button onClick={copy} className="text-[10px] font-mono text-ink-muted hover:text-ink-primary flex items-center gap-1">
+      {copied ? 'Copied' : 'Copy'}
+    </button>
   )
 }
 
@@ -128,7 +134,7 @@ function VsCodeMarkdown({ markdown }) {
     return (
       <div className="text-center py-20 text-ink-muted">
         <p className="text-accent mb-4"><IconFile className="w-10 h-10 mx-auto" /></p>
-        <p className="text-xs font-mono">No target workspace payload parsed.</p>
+        <p className="text-xs font-mono">No documentation content available.</p>
       </div>
     )
   }
@@ -138,9 +144,12 @@ function VsCodeMarkdown({ markdown }) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          h1: ({ node, ...props }) => <h1 className="text-[1.8em] font-display font-bold text-ink-primary mt-0 mb-4 pb-2 border-b border-border leading-tight" {...props} />,
-          h2: ({ node, ...props }) => <h2 className="text-[1.4em] font-display font-bold text-ink-primary mt-8 mb-3 pb-2 border-b border-border leading-tight" {...props} />,
-          h3: ({ node, ...props }) => <h3 className="text-[1.15em] font-display font-bold text-ink-primary mt-6 mb-2 leading-tight" {...props} />,
+          h1: ({ node, ...props }) => <h1 className="text-[1.4em] sm:text-[1.8em] font-display font-bold text-ink-primary mt-0 mb-4 pb-2 border-b border-border leading-tight" {...props} />,
+          h2: ({ node, ...props }) => <h2 className="text-[1.2em] sm:text-[1.4em] font-display font-bold text-ink-primary mt-6 sm:mt-8 mb-3 pb-2 border-b border-border leading-tight" {...props} />,
+          h3: ({ node, ...props }) => <h3 className="text-[1.05em] sm:text-[1.15em] font-display font-bold text-ink-primary mt-5 sm:mt-6 mb-2 leading-tight" {...props} />,
+          h4: ({ node, ...props }) => <h4 className="text-[1em] sm:text-[1.05em] font-display font-bold text-ink-primary mt-4 sm:mt-5 mb-2 leading-tight" {...props} />,
+          h5: ({ node, ...props }) => <h5 className="text-[0.9em] sm:text-[1em] font-display font-bold text-ink-muted mt-3 sm:mt-4 mb-1 leading-tight" {...props} />,
+          h6: ({ node, ...props }) => <h6 className="text-[0.85em] sm:text-[0.9em] font-display font-bold text-ink-muted mt-3 sm:mt-4 mb-1 leading-tight" {...props} />,
           p: ({ node, ...props }) => {
             const children = props.children
             if (children && typeof children === 'string') {
@@ -152,10 +161,10 @@ function VsCodeMarkdown({ markdown }) {
                 }
               }
             }
-            return <p className="text-ink-secondary leading-[1.6] mb-4 text-xs font-mono" {...props} />
+            return <p className="text-ink-secondary leading-[1.6] mb-4 text-xs sm:text-sm font-mono" {...props} />
           },
-          ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-4 space-y-1 text-ink-secondary text-xs font-mono" {...props} />,
-          ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-4 space-y-1 text-ink-secondary text-xs font-mono" {...props} />,
+          ul: ({ node, ...props }) => <ul className="list-disc pl-4 sm:pl-6 mb-4 space-y-1 text-ink-secondary text-xs sm:text-sm font-mono" {...props} />,
+          ol: ({ node, ...props }) => <ol className="list-decimal pl-4 sm:pl-6 mb-4 space-y-1 text-ink-secondary text-xs sm:text-sm font-mono" {...props} />,
           li: ({ node, ...props }) => <li className="leading-[1.6]" {...props} />,
           hr: () => <hr className="border-t border-border my-6" />,
           pre: ({ node, children, ...props }) => <>{children}</>,
@@ -176,22 +185,16 @@ function VsCodeMarkdown({ markdown }) {
             }
 
             return (
-              <div className="my-4 rounded-xl overflow-hidden border border-border bg-code shadow-lg">
-                <div className="flex items-center justify-between bg-bg-surface px-4 py-1.5 border-b border-border">
-                  <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest">{lang || 'py-code'}</span>
+              <div className="my-3 sm:my-4 rounded-xl overflow-hidden border border-border bg-code shadow-lg">
+                <div className="flex items-center justify-between bg-bg-surface px-3 sm:px-4 py-1.5 border-b border-border">
+                  <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest">{lang || 'code'}</span>
                   <CopyButton text={codeStr} />
                 </div>
                 <SyntaxHighlighter
                   PreTag="div"
                   language={lang || 'python'}
                   style={vscDarkPlus}
-                  customStyle={{
-                    margin: 0,
-                    padding: '16px',
-                    background: '#080e17',
-                    fontSize: '12px',
-                    lineHeight: '1.5',
-                  }}
+                  customStyle={{ margin: 0, padding: '16px', background: '#080e17', fontSize: '12px', lineHeight: '1.5' }}
                   showLineNumbers={codeStr.split('\n').length > 5}
                   lineNumberStyle={{ color: '#475569', minWidth: '2.5em' }}
                 >
@@ -203,14 +206,17 @@ function VsCodeMarkdown({ markdown }) {
           blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-accent-blue pl-4 py-0.5 my-4 text-ink-muted italic" {...props} />,
           table: ({ node, ...props }) => (
             <div className="w-full overflow-x-auto my-6 rounded-xl border border-border bg-bg-surface/35">
-              <table className="w-full text-xs font-mono border-collapse" {...props} />
+              <table className="w-full text-[10px] sm:text-xs font-mono border-collapse" {...props} />
             </div>
           ),
           thead: ({ node, ...props }) => <thead className="bg-bg-surface" {...props} />,
-          th: ({ node, ...props }) => <th className="text-left px-4 py-2 font-bold text-ink-primary border-b border-border tracking-wider uppercase text-[10px]" {...props} />,
-          td: ({ node, ...props }) => <td className="px-4 py-2 border-t border-border text-ink-secondary" {...props} />,
+          th: ({ node, ...props }) => <th className="text-left px-2 sm:px-4 py-2 font-bold text-ink-primary border-b border-border tracking-wider uppercase text-[10px]" {...props} />,
+          td: ({ node, ...props }) => <td className="px-2 sm:px-4 py-2 border-t border-border text-ink-secondary" {...props} />,
           tr: ({ node, ...props }) => <tr className="hover:bg-bg-surface/50 transition-colors" {...props} />,
           a: ({ node, ...props }) => <a className="text-accent-blue hover:text-accent underline underline-offset-2" target="_blank" rel="noopener noreferrer" {...props} />,
+          img: ({ node, ...props }) => <img className="max-w-full rounded-lg my-4 border border-border" {...props} />,
+          strong: ({ node, ...props }) => <strong className="font-bold text-ink-primary" {...props} />,
+          em: ({ node, ...props }) => <em className="italic text-ink-secondary" {...props} />,
         }}
       >
         {markdown}
@@ -219,47 +225,117 @@ function VsCodeMarkdown({ markdown }) {
   )
 }
 
-function CopyButton({ text }) {
-  const [copied, setCopied] = useState(false)
-  const copy = async () => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+/* ── Universal doc tab builder ──────────────────────────────── */
+
+function buildDocTabs(docs) {
+  if (!docs) return [{ id: 'readme', label: 'README.md', icon: IconBook, content: '' }]
+
+  const sections = []
+  const lines = docs.split('\n')
+  let currentHeading = null
+  let currentContent = []
+  let introLines = []
+
+  for (const line of lines) {
+    const headingMatch = line.match(/^##\s+(.+)$/)
+    if (headingMatch) {
+      if (currentHeading !== null) {
+        sections.push({ heading: currentHeading, content: currentContent.join('\n').trim() })
+      } else if (introLines.length > 0) {
+        sections.push({ heading: null, content: introLines.join('\n').trim() })
+      }
+      currentHeading = headingMatch[1].trim()
+      currentContent = []
+    } else if (currentHeading !== null) {
+      currentContent.push(line)
+    } else {
+      introLines.push(line)
+    }
   }
-  return (
-    <button onClick={copy} className="text-[10px] font-mono text-ink-muted hover:text-ink-primary flex items-center gap-1">
-      {copied ? 'Copied' : 'Copy'}
-    </button>
-  )
+
+  if (currentHeading !== null) {
+    sections.push({ heading: currentHeading, content: currentContent.join('\n').trim() })
+  } else if (introLines.length > 0) {
+    sections.push({ heading: null, content: introLines.join('\n').trim() })
+  }
+
+  const readmeSections = []
+  const apiSections = []
+  const archSections = []
+
+  for (const s of sections) {
+    const h = (s.heading || '').toLowerCase().trim()
+    const isApi = /^api|endpoint|route|rest|graphql|backend\s+(api|endpoint)/.test(h)
+    const isArch = /^project\s+structure|^file\s+structure|^directory|^architecture|^workflow|^component|^module|^data\s+flow|^state\s+management|^configuration|^deployment|^error\s+handling|^logging/.test(h)
+
+    if (isApi) {
+      apiSections.push(s)
+    } else if (isArch) {
+      archSections.push(s)
+    } else {
+      readmeSections.push(s)
+    }
+  }
+
+  const tabs = []
+
+  const readmeContent = readmeSections
+    .map(s => (s.heading ? `## ${s.heading}\n\n${s.content}` : s.content))
+    .join('\n\n')
+  tabs.push({ id: 'readme', label: 'README.md', icon: IconBook, content: readmeContent || docs })
+
+  if (apiSections.length > 0) {
+    const apiContent = apiSections
+      .map(s => `## ${s.heading}\n\n${s.content}`)
+      .join('\n\n')
+    tabs.push({ id: 'api', label: 'API Reference', icon: IconPuzzle, content: apiContent })
+  }
+
+  if (archSections.length > 0) {
+    const archContent = archSections
+      .map(s => `## ${s.heading}\n\n${s.content}`)
+      .join('\n\n')
+    tabs.push({ id: 'architecture', label: 'Architecture', icon: IconDatabase, content: archContent })
+  }
+
+  return tabs
 }
+
+/* ── Python fixed tabs ──────────────────────────────────────── */
+
+const PYTHON_TABS = [
+  { id: 'readme', label: 'README.md', icon: IconBook, field: 'readme_docs' },
+  { id: 'api', label: 'endpoints.py', icon: IconPuzzle, field: 'api_docs' },
+  { id: 'summary', label: 'architect.json', icon: IconDatabase, field: 'generated_docs' },
+]
+
+/* ── Status Display ─────────────────────────────────────────── */
 
 function StatusDisplay({ status, error }) {
   if (status === 'failed') {
     return (
-      <div className="text-center py-24 font-mono text-xs">
-        <p className="text-danger mb-4">[compiler_critical_exception] compilation aborted.</p>
-        <p className="text-ink-secondary max-w-md mx-auto">{error || 'Unknown syntax error during directory compilation.'}</p>
-        <Link to="/input" className="btn-accent inline-block mt-8">RESTART_COMPILER()</Link>
+      <div className="text-center py-16 sm:py-24 font-mono text-xs px-4">
+        <p className="text-danger mb-4">Documentation generation failed</p>
+        <p className="text-ink-secondary max-w-md mx-auto">{error || 'An unexpected error occurred.'}</p>
+        <Link to="/dashboard" className="btn-accent inline-block mt-8">Back to Dashboard</Link>
       </div>
     )
   }
   return (
-    <div className="text-center py-24 font-mono text-xs text-accent-blue space-y-4">
+    <div className="text-center py-16 sm:py-24 font-mono text-xs text-accent-blue space-y-4 px-4">
       <div className="w-12 h-12 rounded-full border-4 border-t-accent-blue border-r-transparent animate-spin mx-auto" />
-      <h2 className="text-ink-primary">COMPILING_WORKSPACE() - RUNNING SYNTAX PIPELINES</h2>
-      <p className="text-ink-muted">Estimated compilation runtime: 15s - 30s. Auto-refreshing context variables...</p>
+      <h2 className="text-ink-primary">Generating documentation...</h2>
+      <p className="text-ink-muted">This usually takes a moment. Auto-refreshing...</p>
     </div>
   )
 }
 
-const DOC_TABS = [
-  { id: 'readme', label: 'README.md', icon: IconBook, field: 'readme_docs', hint: 'Overview & system instructions' },
-  { id: 'api', label: 'endpoints.py', icon: IconPuzzle, field: 'api_docs', hint: 'API interfaces, endpoints, schemas' },
-  { id: 'summary', label: 'architect.json', icon: IconDatabase, field: 'generated_docs', hint: 'Syntax breakdown & module hierarchies' },
-]
+/* ── Main Component ─────────────────────────────────────────── */
 
 export default function Output() {
-  const { docId } = useParams()
+  const { docId, id } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const { addToast } = useAuth()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -268,36 +344,40 @@ export default function Output() {
   const [publishing, setPublishing] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
 
-  const rawContent = project ? project[DOC_TABS.find(t => t.id === activeTab)?.field] || '' : ''
-  const hasOuterFence = /^```(?:markdown|md)?\s*\n/.test(rawContent)
-  const activeContent = normalizeMarkdown(
-    hasOuterFence
-      ? rawContent.replace(/^```(?:markdown|md)?\s*\n/, '').replace(/\n```\s*$/, '')
-      : rawContent
-  )
+  const isUniversal = location.pathname.includes('/output/universal/')
+  const projectId = docId || id
+
+  const fetchPython = useCallback(async () => {
+    const res = await getProjectDetail(projectId)
+    return res.data
+  }, [projectId])
+
+  const fetchUniversal = useCallback(async () => {
+    const res = await getUniversalStatus(projectId)
+    return res.data
+  }, [projectId])
 
   const load = useCallback(async () => {
     try {
-      const res = await getProjectDetail(docId)
-      setProject(res.data)
-      return res.data
-    } catch (err) {
-      addToast('Pipeline load failed.', 'error')
+      const data = isUniversal ? await fetchUniversal() : await fetchPython()
+      setProject(data)
+      return data
+    } catch {
+      addToast('Failed to load project.', 'error')
       return null
     } finally {
       setLoading(false)
     }
-  }, [docId, addToast])
+  }, [isUniversal, fetchPython, fetchUniversal, addToast])
 
   useEffect(() => {
     let interval = null
     const poll = async () => {
       const data = await load()
       if (data && (data.status === 'pending' || data.status === 'processing')) {
-        if (!interval) interval = setInterval(poll, 3000)
+        if (!interval) interval = setInterval(poll, 4000)
       } else {
-        clearInterval(interval)
-        interval = null
+        if (interval) { clearInterval(interval); interval = null }
       }
     }
     poll()
@@ -306,23 +386,45 @@ export default function Output() {
 
   useEffect(() => {
     if (!project) return
-    const first = DOC_TABS.find(t => project[t.field]?.trim())
-    if (first) setActiveTab(first.id)
-  }, [project?.status])
+    if (project.status !== 'done') return
+    if (isUniversal) {
+      const tabs = buildDocTabs(project.docs)
+      if (tabs.length > 0) setActiveTab(tabs[0].id)
+    } else {
+      const first = PYTHON_TABS.find(t => project[t.field]?.trim())
+      if (first) setActiveTab(first.id)
+    }
+  }, [project?.status, isUniversal])
+
+  const activeContent = (() => {
+    if (!project || project.status !== 'done') return ''
+    if (isUniversal) {
+      const tabs = buildDocTabs(project.docs)
+      return tabs.find(t => t.id === activeTab)?.content || ''
+    }
+    const tab = PYTHON_TABS.find(t => t.id === activeTab)
+    if (!tab) return ''
+    const raw = project[tab.field] || ''
+    const hasOuterFence = /^```(?:markdown|md)?\s*\n/.test(raw)
+    return hasOuterFence
+      ? raw.replace(/^```(?:markdown|md)?\s*\n/, '').replace(/\n```\s*$/, '')
+      : raw
+  })()
+
+  const normalizedContent = normalizeMarkdown(activeContent)
 
   const handleCopy = async () => {
-    if (!activeContent) return
-    await navigator.clipboard.writeText(activeContent)
+    if (!normalizedContent) return
+    await navigator.clipboard.writeText(normalizedContent)
     setCopyLabel('COPIED!')
     setTimeout(() => setCopyLabel('COPY_MD()'), 2000)
-    addToast('Content copied to local clipboard.', 'success')
+    addToast('Content copied to clipboard.', 'success')
   }
 
   const handleDownload = () => {
-    if (!activeContent) return
-    const tab = DOC_TABS.find(t => t.id === activeTab)
-    const filename = `${project?.name || 'docs'}_${tab?.id || 'doc'}.md`
-    const blob = new Blob([activeContent], { type: 'text/markdown' })
+    if (!normalizedContent) return
+    const filename = `${project?.name || 'docs'}_${activeTab || 'doc'}.md`
+    const blob = new Blob([normalizedContent], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -332,6 +434,7 @@ export default function Output() {
   }
 
   const handlePublishToggle = async () => {
+    if (!project) return
     setPublishing(true)
     try {
       const res = await publishProject(project.id, { is_published: !project.is_published })
@@ -345,14 +448,13 @@ export default function Output() {
   }
 
   const handleCopyShareLink = () => {
+    if (!project?.public_slug) return
     const url = `${window.location.origin}/public/${project.public_slug}`
     navigator.clipboard.writeText(url)
     setShareCopied(true)
     setTimeout(() => setShareCopied(false), 2000)
     addToast('Share link copied!', 'success')
   }
-
-  const shareUrl = project?.is_published ? `${window.location.origin}/public/${project.public_slug}` : null
 
   if (loading && !project) {
     return (
@@ -365,78 +467,122 @@ export default function Output() {
   if (!project) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center text-xs font-mono">
-        <p className="text-ink-muted">Workspace catalog target ID not found.</p>
+        <div className="text-center space-y-3 px-4">
+          <IconWarning className="w-12 h-12 mx-auto text-warning" />
+          <p className="text-ink-secondary text-sm">Project not found</p>
+          <Link to="/dashboard" className="btn-accent inline-block text-xs font-mono px-6 py-2">Back to Dashboard</Link>
+        </div>
       </div>
     )
   }
 
+  const t = isUniversal ? getMode(project.mode || 'universal') : null
   const isDone = project.status === 'done'
+  const isPythonMode = !isUniversal
+
+  const docTabs = isUniversal
+    ? buildDocTabs(project.docs)
+    : PYTHON_TABS.map(t => ({ ...t, hasContent: !!project[t.field]?.trim() }))
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
       <Helmet>
         <title>{project?.name ? `${project.name} — PyDocAI` : 'Documentation — PyDocAI'}</title>
-        <meta name="description" content={project?.description ? `AI-generated documentation for ${project.name}: ${project.description}` : 'View your AI-generated Python project documentation.'} />
+        <meta name="description" content={project?.description ? `AI-generated documentation for ${project.name}` : 'View your AI-generated documentation.'} />
         <meta name="robots" content="noindex, follow" />
       </Helmet>
       <Navbar />
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* ── LEFT SIDEBAR ── */}
-        <aside className="w-72 flex-shrink-0 border-r border-border bg-[#0b1320] flex flex-col overflow-y-auto">
-          <div className="p-5">
-            <div className="font-mono text-[10px] text-ink-muted uppercase tracking-widest border-b border-border/40 pb-2">
-              Workspace Properties
+      <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
+        {/* ── MOBILE TAB BAR ── */}
+        {isDone && (
+          <div className="lg:hidden bg-bg-surface border-b border-border overflow-x-auto">
+            <div className="flex px-2 py-1 gap-1">
+              {docTabs.map((tab) => {
+                const disabled = !isUniversal && !tab.hasContent
+                return (
+                  <button
+                    key={tab.id}
+                    disabled={disabled}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`whitespace-nowrap px-3 py-2 rounded-md text-[11px] font-mono transition-colors ${
+                      activeTab === tab.id && !disabled
+                        ? 'bg-accent-blue/15 text-accent-blue'
+                        : disabled
+                        ? 'text-ink-muted opacity-40 cursor-not-allowed'
+                        : 'text-ink-secondary hover:bg-bg-elevated/50'
+                    }`}
+                  >
+                    <tab.icon className="w-3.5 h-3.5 inline mr-1.5" />
+                    {tab.label}
+                  </button>
+                )
+              })}
             </div>
-            
+          </div>
+        )}
+
+        {/* ── LEFT SIDEBAR (desktop) ── */}
+        <aside className="hidden lg:flex w-72 flex-shrink-0 border-r border-border bg-[#0b1320] flex-col overflow-y-auto">
+          <div className="p-4 sm:p-5">
+            <div className="font-mono text-[10px] text-ink-muted uppercase tracking-widest border-b border-border/40 pb-2">
+              {isUniversal ? 'Project Properties' : 'Workspace Properties'}
+            </div>
+
             <div className="space-y-4 font-mono text-xs mt-4">
               <div>
-                <span className="text-[10px] text-ink-muted uppercase">SYS_PACKAGE</span>
+                <span className="text-[10px] text-ink-muted uppercase">Name</span>
                 <p className="font-bold text-accent truncate">{project.name}</p>
               </div>
               <div>
-                <span className="text-[10px] text-ink-muted uppercase">STATUS</span>
+                <span className="text-[10px] text-ink-muted uppercase">Status</span>
                 <p className={`font-bold ${isDone ? 'text-success' : 'text-warning animate-pulse'}`}>
                   {project.status.toUpperCase()}
                 </p>
               </div>
               <div>
-                <span className="text-[10px] text-ink-muted uppercase">SOURCE</span>
-                <p className="text-ink-secondary">{project.source_type}</p>
-                {project.github_url && (
-                  <a
-                    href={project.github_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-accent-blue hover:text-accent text-[10px] font-mono truncate block mt-1"
-                  >
+                <span className="text-[10px] text-ink-muted uppercase">Source</span>
+                <p className="text-ink-secondary">{isUniversal ? (t?.label || 'Universal') : project.source_type}</p>
+              </div>
+              {project.github_url && (
+                <div>
+                  <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="text-accent-blue hover:text-accent text-[10px] font-mono truncate block">
                     {project.github_url.replace(/^https?:\/\/github\.com\//, '')}
                     {project.github_branch && <span className="text-ink-muted"> ({project.github_branch})</span>}
                   </a>
-                )}
-              </div>
+                </div>
+              )}
+              {project.description && (
+                <div>
+                  <span className="text-[10px] text-ink-muted uppercase">Description</span>
+                  <p className="text-ink-secondary text-[11px]">{project.description}</p>
+                </div>
+              )}
             </div>
 
             {isDone && (
               <>
                 <div className="space-y-3 pt-4 mt-4 border-t border-border/40">
-                  <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block">Module index</span>
+                  <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block">
+                    {isUniversal ? 'Documentation' : 'Module index'}
+                  </span>
                   <nav className="space-y-1">
-                    {DOC_TABS.map((tab) => {
-                      const hasContent = !!project[tab.field]?.trim()
+                    {docTabs.map((tab) => {
+                      const disabled = !isUniversal && !tab.hasContent
                       return (
                         <button
                           key={tab.id}
-                          disabled={!hasContent}
+                          disabled={disabled}
                           onClick={() => setActiveTab(tab.id)}
                           className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-mono transition-all duration-150 ${
-                            activeTab === tab.id && hasContent
+                            activeTab === tab.id && !disabled
                               ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/30'
-                              : hasContent
-                              ? 'text-ink-secondary hover:bg-bg-elevated/50'
-                              : 'text-ink-muted opacity-40 cursor-not-allowed'
+                              : disabled
+                              ? 'text-ink-muted opacity-40 cursor-not-allowed'
+                              : 'text-ink-secondary hover:bg-bg-elevated/50'
                           }`}
                         >
+                          <tab.icon className="w-3.5 h-3.5 shrink-0" />
                           {tab.label}
                         </button>
                       )
@@ -449,59 +595,91 @@ export default function Output() {
                     {copyLabel}
                   </button>
                   <button onClick={handleDownload} className="btn-accent w-full py-2.5 text-xs font-mono">
-                    DOWNLOAD_FILE()
+                    {isUniversal ? 'Download .md' : 'DOWNLOAD_FILE()'}
                   </button>
                 </div>
 
-                {/* Publish / Share */}
-                <div className="pt-4 mt-4 border-t border-border/40 space-y-2">
-                  <button
-                    onClick={handlePublishToggle}
-                    disabled={publishing}
-                    className={`w-full py-2.5 text-xs font-mono rounded-lg transition-colors ${
-                      project.is_published
-                        ? 'bg-success/10 text-success border border-success/30 hover:bg-success/20'
-                        : 'bg-bg-elevated text-ink-secondary border border-border hover:text-ink-primary'
-                    }`}
-                  >
-                    {publishing ? '...' : project.is_published ? 'Published' : 'Publish'}
-                  </button>
-                  {shareUrl && (
+                {/* Publish / Share (Python mode) */}
+                {isPythonMode && (
+                  <div className="pt-4 mt-4 border-t border-border/40 space-y-2">
                     <button
-                      onClick={handleCopyShareLink}
-                      className="w-full py-2 text-xs font-mono text-accent-blue hover:text-accent transition-colors flex items-center justify-center gap-1"
+                      onClick={handlePublishToggle}
+                      disabled={publishing}
+                      className={`w-full py-2.5 text-xs font-mono rounded-lg transition-colors ${
+                        project.is_published
+                          ? 'bg-success/10 text-success border border-success/30 hover:bg-success/20'
+                          : 'bg-bg-elevated text-ink-secondary border border-border hover:text-ink-primary'
+                      }`}
                     >
-                      {shareCopied ? 'Copied!' : 'Copy share link'}
+                      {publishing ? '...' : project.is_published ? 'Published' : 'Publish'}
                     </button>
-                  )}
-                </div>
+                    {project.is_published && project.public_slug && (
+                      <button
+                        onClick={handleCopyShareLink}
+                        className="w-full py-2 text-xs font-mono text-accent-blue hover:text-accent transition-colors flex items-center justify-center gap-1"
+                      >
+                        {shareCopied ? 'Copied!' : 'Copy share link'}
+                      </button>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>
         </aside>
 
-        {/* IDE Document View Window */}
-        {/* ADDED 'overflow-y-auto' HERE SO THE DOCUMENT BODY CAN SCROLL */}
+        {/* ── MAIN CONTENT ── */}
         <main className="flex-1 min-w-0 bg-code/20 flex flex-col overflow-y-auto relative">
           {isDone && (
-            <div className="sticky top-0 z-20 bg-bg-surface/95 backdrop-blur border-b border-border flex items-center px-4 py-2 font-mono text-xs shadow-sm">
-              <span className="text-ink-muted mr-2">active_file:</span>
-              <span className="text-accent font-bold">/{DOC_TABS.find(t => t.id === activeTab)?.label}</span>
-              <span className="ml-auto text-[10px] text-ink-muted uppercase tracking-wider">{project.name} Workspace</span>
+            <div className="sticky top-0 z-20 bg-bg-surface/95 backdrop-blur border-b border-border flex items-center px-3 sm:px-4 py-2 font-mono text-xs shadow-sm">
+                  <span className="text-ink-muted mr-2 hidden sm:inline flex-shrink-0">active_file:</span>
+              <span className="text-accent font-bold truncate min-w-0">/{docTabs.find(t => t.id === activeTab)?.label || 'docs.md'}</span>
+              <span className="ml-auto text-[10px] text-ink-muted uppercase tracking-wider truncate max-w-[100px] sm:max-w-[180px]">{project.name}</span>
             </div>
           )}
 
-          <div className="flex-1 max-w-4xl w-full mx-auto px-6 py-8">
+          <div className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 py-6 sm:py-8">
             {!isDone ? (
-              <StatusDisplay status={project.status} error={project.error_message} />
+              <StatusDisplay status={project.status} error={project.error || project.error_message} />
             ) : (
-              <div className="glass-card bg-code/40 border border-border rounded-2xl p-8 shadow-2xl">
-                <VsCodeMarkdown markdown={activeContent} />
+              <div className="glass-card bg-code/40 border border-border rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl">
+                <VsCodeMarkdown markdown={normalizedContent} />
               </div>
             )}
 
-            {isDone && project.is_published && (
-              <div className="mt-8">
+            {isDone && (
+              <div className="lg:hidden mt-6 sm:mt-8 flex flex-wrap items-center gap-2 p-3 sm:p-4 bg-bg-surface border border-border rounded-xl">
+                <button onClick={handleCopy} className="px-3 py-1.5 rounded-md text-[10px] font-mono bg-bg-elevated border border-border text-ink-secondary hover:text-ink-primary transition-colors">
+                  {copyLabel}
+                </button>
+                <button onClick={handleDownload} className="px-3 py-1.5 rounded-md text-[10px] font-mono bg-accent-blue/15 text-accent-blue border border-accent-blue/30 hover:bg-accent-blue/25 transition-colors">
+                  {isUniversal ? 'Download .md' : 'DOWNLOAD_FILE()'}
+                </button>
+                {isPythonMode && (
+                  <>
+                    <button
+                      onClick={handlePublishToggle}
+                      disabled={publishing}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-mono transition-colors ${
+                        project.is_published
+                          ? 'bg-success/10 text-success border border-success/30'
+                          : 'bg-bg-elevated text-ink-secondary border border-border hover:text-ink-primary'
+                      }`}
+                    >
+                      {publishing ? '...' : project.is_published ? 'Published' : 'Publish'}
+                    </button>
+                    {project.is_published && project.public_slug && (
+                      <button onClick={handleCopyShareLink} className="px-3 py-1.5 rounded-md text-[10px] font-mono text-accent-blue hover:text-accent transition-colors">
+                        {shareCopied ? 'Copied!' : 'Share link'}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {isDone && isPythonMode && project.is_published && (
+              <div className="mt-6 sm:mt-8">
                 <CommentSection projectId={project.id} isPublic={false} />
               </div>
             )}

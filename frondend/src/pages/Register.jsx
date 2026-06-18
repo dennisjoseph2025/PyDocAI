@@ -83,13 +83,13 @@ export default function Register() {
         <meta name="robots" content="noindex, follow" />
       </Helmet>
       <div className="absolute inset-0 bg-radial-glow pointer-events-none" />
-      <div className="glass-card w-full max-w-md p-10 animate-fade-in relative z-10">
-        <div className="text-center mb-8">
-          <Link to="/" className="font-display font-bold text-2xl inline-block">
+      <div className="glass-card w-full max-w-md p-6 sm:p-10 animate-fade-in relative z-10">
+        <div className="text-center mb-6 sm:mb-8">
+          <Link to="/" className="font-display font-bold text-xl sm:text-2xl inline-block">
             <span className="text-ink-primary">Py</span><span className="text-accent">Doc</span><span className="text-ink-primary">AI</span>
           </Link>
-          <h1 className="font-display font-bold text-2xl text-center mt-4 mb-2 text-ink-primary">Create your account</h1>
-          <p className="text-ink-secondary text-sm text-center">Start generating documentation in seconds</p>
+          <h1 className="font-display font-bold text-xl sm:text-2xl text-center mt-3 sm:mt-4 mb-1 sm:mb-2 text-ink-primary">Create your account</h1>
+          <p className="text-ink-secondary text-xs sm:text-sm text-center">Start generating documentation in seconds</p>
         </div>
 
         {/* GitHub OAuth button */}

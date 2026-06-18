@@ -8,7 +8,6 @@ import Input from './pages/Input'
 import InputPython from './pages/InputPython'
 import InputUniversal from './pages/InputUniversal'
 import Output from './pages/Output'
-import UniversalOutput from './pages/UniversalOutput'
 import Profile from './pages/Profile'
 import GitHubCallback from './pages/GitHubCallback'
 import AdminFeedback from './pages/AdminFeedback'
@@ -53,7 +52,7 @@ export default function App() {
         <Route path="/input/python"           element={<ProtectedRoute><InputPython /></ProtectedRoute>} />
         <Route path="/input/universal"        element={<ProtectedRoute><InputUniversal /></ProtectedRoute>} />
         <Route path="/output/:docId"          element={<ProtectedRoute><Output /></ProtectedRoute>} />
-        <Route path="/output/universal/:id"   element={<ProtectedRoute><UniversalOutput /></ProtectedRoute>} />
+        <Route path="/output/universal/:id"   element={<ProtectedRoute><Output /></ProtectedRoute>} />
         <Route path="/profile"                element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/projects"               element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
 

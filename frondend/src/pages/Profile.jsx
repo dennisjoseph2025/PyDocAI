@@ -55,11 +55,11 @@ export default function Profile() {
         <meta name="robots" content="noindex, follow" />
       </Helmet>
       <Navbar />
-      <main className="flex-1 max-w-[1000px] w-full mx-auto px-6 py-10 flex flex-col md:flex-row gap-8">
+      <main className="flex-1 max-w-[1000px] w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col md:flex-row gap-6 sm:gap-8">
         
         {/* Settings Sidebar */}
         <aside className="w-full md:w-64 flex-shrink-0 space-y-1">
-          <div className="flex items-center gap-4 p-3 mb-4">
+          <div className="flex items-center gap-3 sm:gap-4 p-3 mb-4">
             <div className="w-12 h-12 rounded-md bg-accent-blue/20 border border-accent-blue/50 flex items-center justify-center text-accent-blue font-bold text-xl">
               {initials}
             </div>
