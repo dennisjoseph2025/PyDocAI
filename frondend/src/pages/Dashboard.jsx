@@ -127,10 +127,10 @@ export default function Dashboard() {
 
 
 
-      <div className="flex-1 max-w-[1400px] w-full mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-8">
 
-        <aside className="lg:col-span-1 space-y-6">
-          <div className="glass-card p-6 border-border/80">
+        <aside className="lg:col-span-1 space-y-4 sm:space-y-6">
+          <div className="glass-card p-4 sm:p-6 border-border/80">
             <p className="text-xs font-mono text-ink-muted uppercase tracking-wider mb-4">Workspace Control</p>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-lg bg-accent-blue/10 border border-accent-blue/20 flex items-center justify-center text-accent-blue font-bold font-display">
@@ -167,9 +167,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="glass-card p-6 space-y-4">
+          <div className="glass-card p-4 sm:p-6 space-y-4">
             <p className="text-xs font-mono text-ink-muted uppercase tracking-wider">Metrics</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
               <div className="bg-bg-surface p-3 rounded-xl border border-border">
                 <span className="text-[10px] text-ink-muted uppercase block">Total Docs</span>
                 <span className="text-xl font-bold text-accent-blue font-display">{stats?.total ?? totalCount}</span>
@@ -206,15 +206,15 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        <main className="lg:col-span-3 space-y-6">
-          <div className="glass-card p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <main className="lg:col-span-3 space-y-4 sm:space-y-6">
+          <div className="glass-card p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div>
-                <h1 className="text-2xl font-display font-bold text-ink-primary">Workspaces</h1>
-                <p className="text-sm text-ink-secondary">Manage and browse generated documentation suites</p>
+                <h1 className="text-xl sm:text-2xl font-display font-bold text-ink-primary">Workspaces</h1>
+                <p className="text-xs sm:text-sm text-ink-secondary">Manage and browse generated documentation suites</p>
               </div>
 
-              <div className="flex bg-bg-surface p-1 rounded-lg border border-border text-xs font-mono">
+              <div className="flex bg-bg-surface p-1 rounded-lg border border-border text-[10px] sm:text-xs font-mono overflow-x-auto">
                 {['all', 'folder', 'github', 'file', 'published'].map(t => (
                   <button
                     key={t}
@@ -227,7 +227,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="relative mb-6">
+            <div className="relative mb-4 sm:mb-6">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted">
                 <IconSearch className="w-4 h-4" />
               </span>
@@ -339,8 +339,8 @@ export default function Dashboard() {
       <Footer />
 
       {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-bg-elevated border border-border rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-8 space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-bg-elevated border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 sm:p-8 space-y-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-danger/20 border border-danger/30 flex items-center justify-center text-danger text-lg font-bold">!</div>
               <div>

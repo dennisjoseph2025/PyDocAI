@@ -250,12 +250,12 @@ export default function InputPython() {
       <Helmet><title>New Generation — Python Doc</title></Helmet>
       <Navbar />
 
-      <main className="max-w-7xl w-full mx-auto px-6 py-8 flex flex-col lg:flex-row gap-8">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
 
         {/* Left Side: Form */}
-        <section className="flex-1 space-y-6">
+        <section className="flex-1 space-y-4 sm:space-y-6">
           <div>
-            <h1 className="text-3xl font-display font-bold text-ink-primary">PyDocAI &mdash; Python Documentation</h1>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold text-ink-primary">PyDocAI &mdash; Python Documentation</h1>
             <p className="text-xs text-ink-secondary mt-1">Upload your Python project. AST-parsed, full documentation.</p>
           </div>
 
@@ -453,7 +453,7 @@ export default function InputPython() {
         </section>
 
         {/* Right Side: Manifest Preview */}
-        <section className="w-full lg:w-96 flex-shrink-0 flex flex-col">
+        <section className="w-full lg:w-96 flex-shrink-0 flex-col hidden lg:flex">
           <div className="glass-card bg-code border border-border rounded-xl flex-1 flex flex-col overflow-hidden shadow-2xl h-[480px]">
             <div className="bg-bg-surface px-4 py-2.5 border-b border-border flex items-center justify-between">
               <span className="text-[10px] font-mono text-ink-secondary uppercase tracking-widest flex items-center gap-2">

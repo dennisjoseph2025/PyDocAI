@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap');
 
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -50,5 +55,8 @@
   /* Badge styling for IDE look */
   .dev-badge {
     @apply font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded border flex items-center gap-1.5 w-max;
+  }
+  .animate-slide-in-right {
+    animation: slide-in-right 0.25s ease-out;
   }
 }

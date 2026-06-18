@@ -52,7 +52,7 @@ export default function Published() {
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
       <Navbar />
-      <div className="max-w-[1400px] mx-auto px-6 py-8 flex-1 w-full">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-accent-blue/10 border border-accent-blue/20 flex items-center justify-center text-accent-blue">

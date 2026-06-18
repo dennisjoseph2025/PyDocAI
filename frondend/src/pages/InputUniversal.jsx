@@ -187,10 +187,10 @@ export default function InputUniversal() {
       <Helmet><title>New Generation — Universal Doc</title></Helmet>
       <Navbar />
 
-      <main className="max-w-7xl w-full mx-auto px-6 py-8 flex flex-col lg:flex-row gap-8">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
 
         {/* LEFT: Manifest Preview (reversed — manifest first) */}
-        <section className="w-full lg:w-96 flex-shrink-0 flex flex-col order-2 lg:order-1">
+        <section className="w-full lg:w-96 flex-shrink-0 flex-col order-2 lg:order-1 hidden lg:flex">
           <div className="bg-bg-surface border border-border rounded-lg flex-1 flex flex-col overflow-hidden shadow-sm h-[480px]">
             <div className="border-b border-border px-4 py-2 flex items-center justify-between">
               <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest flex items-center gap-2">
