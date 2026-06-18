@@ -1,38 +1,25 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { getAllProjects } from '../api'
+import { getAdminStats, adminGetUserProjects } from '../api'
 import useAuth from '../hooks/useAuth'
 import AdminLayout from '../components/AdminLayout'
 import LoadingSpinner from '../components/LoadingSpinner'
-import Pagination from '../components/Pagination'
-import { IconFolder, IconUser, IconCode, IconSearch, IconChartIncreasing } from '../components/Icons'
-
-const PAGE_SIZE = 10
+import {
+  IconUser, IconUsers, IconGlobe, IconBook, IconClock, IconGithub,
+  IconDatabase, IconCheck, IconWarning, IconBolt, IconRefresh,
+  IconFile, IconCalendar, IconChartIncreasing, IconSearch
+} from '../components/Icons'
 
 export default function AdminProjects() {
   const { user, isLoading, addToast } = useAuth()
   const navigate = useNavigate()
-  const [projects, setProjects] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterSource, setFilterSource] = useState('')
-
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search)
-      setPage(1)
-    }, 500)
-    return () => clearTimeout(handler)
-  }, [search])
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [userProjects, setUserProjects] = useState([])
+  const [projectsLoading, setProjectsLoading] = useState(false)
 
   useEffect(() => {
     if (isLoading) return
@@ -40,184 +27,264 @@ export default function AdminProjects() {
       navigate('/', { replace: true })
       return
     }
-    const fetchProjects = async () => {
-      try {
-        setLoading(true)
-        const params = { page, page_size: PAGE_SIZE }
-        if (debouncedSearch) params.search = debouncedSearch
-        if (filterStatus) params.status = filterStatus
-        if (filterSource) params.source_type = filterSource
+    fetchStats()
+  }, [user, isLoading, navigate])
 
-        const res = await getAllProjects(params)
-        const data = res.data || {}
-        setStats(data.stats || null)
-        setProjects(data.results || [])
-        setTotalCount(data.count || 0)
-        setTotalPages(Math.ceil((data.count || 0) / PAGE_SIZE) || 1)
-      } catch (error) {
-        console.error('Error fetching admin projects:', error)
-        addToast('Failed to load projects', 'error')
-      } finally {
-        setLoading(false)
-      }
+  const fetchStats = async () => {
+    setLoading(true)
+    try {
+      const res = await getAdminStats()
+      setStats(res.data)
+    } catch {
+      addToast('Failed to load stats', 'error')
+    } finally {
+      setLoading(false)
     }
-    fetchProjects()
-  }, [user, isLoading, navigate, addToast, debouncedSearch, filterStatus, filterSource, page])
+  }
+
+  const handleSelectUser = async (u) => {
+    setSelectedUser(u)
+    setProjectsLoading(true)
+    setUserProjects([])
+    try {
+      const res = await adminGetUserProjects(u.id)
+      setUserProjects(res.data?.results ?? (Array.isArray(res.data) ? res.data : []))
+    } catch {
+      addToast('Failed to load user projects', 'error')
+    } finally {
+      setProjectsLoading(false)
+    }
+  }
 
   if (isLoading) return <AdminLayout><div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" className="text-accent" /></div></AdminLayout>
   if (!user || !(user.role === 'admin' || user.is_staff)) return null
 
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''
+
   return (
     <AdminLayout>
       <Helmet>
-        <title>Admin Dashboard — PyDocAI</title>
+        <title>Dashboard — PyDocAI</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      <div className="mb-8">
-        <h1 className="text-3xl font-display font-bold text-ink-primary">
-          All Projects
-        </h1>
-        <p className="text-ink-secondary mt-1">
-          View all projects across all users
-        </p>
-      </div>
 
-      {/* Search & Filters */}
-      <div className="glass-card p-4 mb-6 flex flex-wrap gap-4 items-center">
-        <div className="relative flex-1 min-w-[200px]">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted">
-            <IconSearch className="w-4 h-4" />
-          </span>
-          <input
-            type="text"
-            placeholder="Search by name, user email or name..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="input-field pl-10 pr-4 py-2 text-sm w-full"
-          />
-        </div>
-        <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1) }}
-          className="bg-bg-surface border border-border rounded-xl px-4 py-2 text-sm text-ink-primary focus:outline-none focus:border-accent">
-          <option value="">All Status</option>
-          <option value="done">Done</option>
-          <option value="processing">Processing</option>
-          <option value="failed">Failed</option>
-          <option value="pending">Pending</option>
-        </select>
-        <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1) }}
-          className="bg-bg-surface border border-border rounded-xl px-4 py-2 text-sm text-ink-primary focus:outline-none focus:border-accent">
-          <option value="">All Sources</option>
-          <option value="folder">Folder</option>
-          <option value="github">GitHub</option>
-          <option value="file">File</option>
-        </select>
-      </div>
-
-      {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-bold text-ink-primary">{stats.total}</p>
-            <p className="text-xs text-ink-muted mt-1">Total</p>
-          </div>
-          <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-bold text-success">{stats.done}</p>
-            <p className="text-xs text-ink-muted mt-1">Done</p>
-          </div>
-          <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-bold text-danger">{stats.failed}</p>
-            <p className="text-xs text-ink-muted mt-1">Failed</p>
-          </div>
-          <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-bold text-warning">{stats.processing + stats.pending}</p>
-            <p className="text-xs text-ink-muted mt-1">In Progress</p>
-          </div>
-        </div>
-      )}
-
-      {/* Projects List */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" className="text-accent" /></div>
-      ) : projects.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="text-6xl mb-6 opacity-20 text-ink-muted"><IconFolder className="w-16 h-16" /></div>
-          <h3 className="text-xl font-bold text-ink-primary mb-2">No projects found</h3>
-          <p className="text-ink-secondary text-center max-w-md">
-            {search || filterStatus || filterSource ? 'No projects match your current filters.' : 'No projects have been created yet by any users.'}
-          </p>
-        </div>
-      ) : (
+      {selectedUser ? (
         <>
-          <div className="space-y-4">
-            {projects.map(project => (
-              <div key={project.id} className="glass-card p-5 hover:border-accent/50 transition-border duration-300">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl">
-                      {project.source_type === 'github' ? <IconCode className="w-5 h-5 text-accent" /> :
-                       project.source_type === 'folder' ? <IconFolder className="w-5 h-5 text-warning" /> :
-                        <IconChartIncreasing className="w-5 h-5 text-success" />}
-                    </div>
+          <div className="mb-6">
+            <button
+              onClick={() => { setSelectedUser(null); setUserProjects([]) }}
+              className="flex items-center gap-1 text-sm text-ink-muted hover:text-ink-primary transition-colors mb-4"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> Back to dashboard
+            </button>
+            <h1 className="text-3xl font-display font-bold text-ink-primary">
+              {selectedUser.name || selectedUser.email}
+            </h1>
+            <p className="text-ink-secondary mt-1">
+              Published projects ({userProjects.length} of {selectedUser.published_count})
+            </p>
+          </div>
+
+          {projectsLoading ? (
+            <div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" className="text-accent" /></div>
+          ) : userProjects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <IconGlobe className="w-16 h-16 text-ink-muted/20 mb-4" />
+              <h3 className="text-xl font-bold text-ink-primary mb-2">No published projects</h3>
+              <p className="text-ink-secondary text-center max-w-md">This user hasn't published any projects yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {userProjects.map((p) => (
+                <div key={p.id} className="glass-card p-5 hover:border-accent/50 transition-border duration-300">
+                  <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-display font-bold text-xl text-ink-primary mb-1 truncate">
-                        {project.name || 'Untitled'}
+                        {p.name || 'Untitled'}
                       </h3>
-                      <p className="text-sm text-ink-secondary">
-                        {project.description || 'No description provided'}
+                      <p className="text-sm text-ink-secondary line-clamp-2">
+                        {p.description || 'No description'}
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-ink-muted">By:</span>
-                        <span className="font-medium text-ink-primary">{project.user_name || 'Unknown'}</span>
-                      </div>
                     </div>
+                    <Link
+                      to={`/public/${p.public_slug}`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent/20 text-xs font-mono transition-colors shrink-0 ml-4"
+                    >
+                      <IconGlobe className="w-3.5 h-3.5" /> View
+                    </Link>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="px-2.5 py-0.5 rounded text-xs font-mono">
-                      {project.source_type || 'files'}
+                  <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border text-xs text-ink-muted">
+                    <span className="flex items-center gap-1">
+                      <IconBook className="w-3.5 h-3.5" /> {p.file_count || 0} files
                     </span>
-                    <span className="text-ink-muted">
-                      {new Date(project.created_at).toLocaleDateString()}
+                    <span className="flex items-center gap-1">
+                      <IconClock className="w-3.5 h-3.5" /> {formatDate(p.updated_at)}
                     </span>
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-display font-bold text-ink-primary">Dashboard</h1>
+              <p className="text-ink-secondary mt-1">Platform overview and statistics</p>
+            </div>
+            <button onClick={() => { fetchStats() }} className="btn-ghost text-sm !px-4 !py-2 flex items-center gap-2">
+              <IconRefresh className="w-4 h-4" /> Refresh
+            </button>
+          </div>
 
-                <div className="mt-3 pt-3 border-t border-border">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <p className="text-xs text-ink-muted">Status:</p>
-                      <span className={`px-2 py-0.5 rounded text-xs ${
-                        'done' === project.status ? 'bg-success/20 text-success' :
-                        'processing' === project.status ? 'bg-warning/20 text-warning' :
-                        'failed' === project.status ? 'bg-danger/20 text-danger' :
-                        'bg-border/20 text-ink-secondary'
-                      }`}>
-                        {project.status}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-ink-muted">Files:</p>
-                      <span className="font-medium text-ink-primary">{(project.file_count || 0)}</span>
-                    </div>
-                    <div>
-                      <Link to={`/output/${project.id}`} className="p-1.5 rounded-lg hover:bg-bg-elevated text-ink-muted hover:text-ink-primary transition-all">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      </Link>
-                    </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" className="text-accent" /></div>
+          ) : !stats ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <IconChartIncreasing className="w-16 h-16 text-ink-muted/20 mb-4" />
+              <h3 className="text-xl font-bold text-ink-primary mb-2">No data available</h3>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Users section */}
+              <div>
+                <h2 className="text-lg font-display font-bold text-ink-primary mb-4 flex items-center gap-2">
+                  <IconUsers className="w-5 h-5 text-accent" /> Users
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="glass-card p-5 text-center">
+                    <p className="text-3xl font-bold text-ink-primary font-display">{stats.users.total}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono">Total</p>
+                  </div>
+                  <div className="glass-card p-5 text-center">
+                    <p className="text-3xl font-bold text-success font-display">{stats.users.verified}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono">Verified</p>
+                  </div>
+                  <div className="glass-card p-5 text-center">
+                    <p className="text-3xl font-bold text-ink-primary font-display">{stats.users.github_connected}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono flex items-center justify-center gap-1">
+                      <IconGithub className="w-3 h-3" /> GitHub
+                    </p>
+                  </div>
+                  <div className="glass-card p-5 text-center">
+                    <p className="text-3xl font-bold text-accent font-display">{stats.users.new_this_week}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono">New this week</p>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
 
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            totalCount={totalCount}
-            onPageChange={setPage}
-          />
+              {/* Projects section */}
+              <div>
+                <h2 className="text-lg font-display font-bold text-ink-primary mb-4 flex items-center gap-2">
+                  <IconDatabase className="w-5 h-5 text-accent" /> Projects
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="glass-card p-5 text-center">
+                    <p className="text-3xl font-bold text-ink-primary font-display">{stats.projects.total}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono">Total</p>
+                  </div>
+                  <div className="glass-card p-5 text-center border border-success/20">
+                    <p className="text-3xl font-bold text-success font-display">{stats.projects.done}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono flex items-center justify-center gap-1">
+                      <IconCheck className="w-3 h-3 text-success" /> Done
+                    </p>
+                  </div>
+                  <div className="glass-card p-5 text-center border border-warning/20">
+                    <p className="text-3xl font-bold text-warning font-display">{stats.projects.processing}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono flex items-center justify-center gap-1">
+                      <IconBolt className="w-3 h-3 text-warning" /> Processing
+                    </p>
+                  </div>
+                  <div className="glass-card p-5 text-center border border-danger/20">
+                    <p className="text-3xl font-bold text-danger font-display">{stats.projects.failed}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono flex items-center justify-center gap-1">
+                      <IconWarning className="w-3 h-3 text-danger" /> Failed
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                  <div className="glass-card p-5 text-center">
+                    <p className="text-3xl font-bold text-ink-muted font-display">{stats.projects.pending}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono">Pending</p>
+                  </div>
+                  <div className="glass-card p-5 text-center">
+                    <p className="text-3xl font-bold text-accent font-display">{stats.projects.new_this_week}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono">New this week</p>
+                  </div>
+                  <div className="glass-card p-5 text-center">
+                    <p className="text-3xl font-bold text-accent font-display">{stats.projects.new_this_month}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-mono">New this month</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Source breakdown */}
+              {stats.projects.by_source?.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-display font-bold text-ink-primary mb-4 flex items-center gap-2">
+                    <IconFile className="w-5 h-5 text-accent" /> By Source
+                  </h2>
+                  <div className="glass-card overflow-hidden">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-bg-elevated">
+                          <th className="text-left text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">Source</th>
+                          <th className="text-right text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">Count</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.projects.by_source.map((s, i) => (
+                          <tr key={i} className="border-t border-border">
+                            <td className="px-6 py-4 text-sm text-ink-primary capitalize">{s.source_type}</td>
+                            <td className="px-6 py-4 text-right text-sm font-bold text-ink-primary font-mono">{s.count}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Top users */}
+              {stats.top_users?.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-display font-bold text-ink-primary mb-4 flex items-center gap-2">
+                    <IconUser className="w-5 h-5 text-accent" /> Top Users
+                  </h2>
+                  <div className="glass-card overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-bg-elevated">
+                            <th className="text-left text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">#</th>
+                            <th className="text-left text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">User</th>
+                            <th className="text-right text-xs font-display font-bold text-ink-muted uppercase tracking-widest px-6 py-4">Projects</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {stats.top_users.map((u, i) => (
+                            <tr key={i} className="border-t border-border">
+                              <td className="px-6 py-4 text-sm text-ink-muted font-mono">{i + 1}</td>
+                              <td className="px-6 py-4">
+                                <button
+                                  onClick={() => handleSelectUser(u)}
+                                  className="text-sm text-ink-primary hover:text-accent transition-colors text-left"
+                                >
+                                  {u.name || u.email}
+                                </button>
+                              </td>
+                              <td className="px-6 py-4 text-right text-sm font-bold text-ink-primary font-mono">{u.project_count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </AdminLayout>

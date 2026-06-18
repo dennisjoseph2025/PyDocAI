@@ -46,6 +46,8 @@ services:
         UV_LINK_MODE: copy
         UV_PROJECT_ENVIRONMENT: /opt/venv
       depends_on:
+        db:
+          condition: service_healthy
         redis:
           condition: service_healthy
 
@@ -61,7 +63,10 @@ services:
       - ./backend/.env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
+      UV_PROJECT_ENVIRONMENT: /opt/venv
     depends_on:
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
 
@@ -77,7 +82,10 @@ services:
       - ./backend/.env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
+      UV_PROJECT_ENVIRONMENT: /opt/venv
     depends_on:
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
 
@@ -91,9 +99,47 @@ services:
     ports:
       - "6432:5432"
     depends_on:
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
+
+  fastapi-parser:
+    build:
+      context: ./backend/services/parser
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://pydocai_user:pydocai_pass@db:5432/pydocai
+      INTERNAL_API_KEY: pydocai-internal-key
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8002:8002"
+
+  fastapi-ai:
+    build:
+      context: ./backend/services/ai
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://pydocai_user:pydocai_pass@db:5432/pydocai
+      INTERNAL_API_KEY: pydocai-internal-key
+      EMBEDDING_MODEL: all-MiniLM-L6-v2
+    volumes:
+      - model_cache:/root/.cache/huggingface
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8003:8003"
 
 volumes:
   postgres_data:
   static_volume:
+  model_cache:

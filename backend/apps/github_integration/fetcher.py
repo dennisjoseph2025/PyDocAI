@@ -147,93 +147,70 @@ def get_public_repo_folders(full_name: str, branch: str = None, github_token=Non
     return folders
 
 
+def _download_and_extract_zipball(url: str, headers: dict, folder_path: str) -> list:
+    """Download a GitHub zipball and extract .py files."""
+    import io
+    import zipfile
+
+    resp = requests.get(url, headers=headers, timeout=30, stream=True)
+    resp.raise_for_status()
+    zip_bytes = resp.content
+
+    files = []
+    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+        names = zf.namelist()
+        # Zipball root is {owner}-{repo}-{sha}/ — find common top-level dir
+        prefix = ''
+        if names:
+            first = names[0]
+            if '/' in first:
+                prefix = first.split('/', 1)[0] + '/'
+
+        for name in names:
+            if name.endswith('/'):
+                continue
+            if not name.endswith('.py'):
+                continue
+            rel_path = name[len(prefix):] if prefix else name
+            if folder_path and folder_path != '/':
+                if not rel_path.startswith(folder_path.lstrip('/')):
+                    continue
+            try:
+                content = zf.read(name).decode('utf-8', errors='ignore')
+                files.append({'file_path': rel_path, 'content': content})
+            except Exception:
+                pass
+    return files
+
+
 def import_folder_from_repo(github_token, full_name, folder_path, branch=None):
     from github import Github
     g = Github(github_token)
     repo = g.get_repo(full_name)
     branch = branch or repo.default_branch
-    files = []
 
-    def fetch_contents(path):
-        try:
-            contents = repo.get_contents(path, ref=branch)
-            if not isinstance(contents, list):
-                contents = [contents]
-            for item in contents:
-                if item.type == 'dir':
-                    fetch_contents(item.path)
-                elif item.type == 'file' and item.path.endswith('.py'):
-                    try:
-                        content = item.decoded_content.decode('utf-8', errors='ignore')
-                        files.append({'file_path': item.path, 'content': content})
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-
-    start = folder_path.lstrip('/') if folder_path and folder_path != '/' else ''
-    fetch_contents(start)
-    return files
-
-
-def _fetch_contents_api(full_name: str, path: str, branch: str) -> list:
-    """Fetch directory contents via GitHub REST API."""
-    api_token = getattr(settings, 'GITHUB_API_TOKEN', None)
-    headers = {'Accept': 'application/vnd.github+json'}
-    if api_token and api_token.strip():
-        headers['Authorization'] = f'token {api_token}'
-
-    url = f'https://api.github.com/repos/{full_name}/contents/{path}'
-    params = {'ref': branch} if branch else {}
-
-    resp = requests.get(url, headers=headers, params=params, timeout=10)
-    if resp.status_code == 404:
-        return []
-    resp.raise_for_status()
-    return resp.json()
-
-
-def _fetch_file_content_api(full_name: str, path: str, branch: str) -> str | None:
-    """Fetch a single file's content via GitHub REST API."""
-    api_token = getattr(settings, 'GITHUB_API_TOKEN', None)
-    headers = {'Accept': 'application/vnd.github+json'}
-    if api_token and api_token.strip():
-        headers['Authorization'] = f'token {api_token}'
-
-    url = f'https://api.github.com/repos/{full_name}/contents/{path}'
-    params = {'ref': branch} if branch else {}
-
-    resp = requests.get(url, headers=headers, params=params, timeout=10)
-    if resp.status_code != 200:
-        return None
-
-    import base64
-    data = resp.json()
-    return base64.b64decode(data['content']).decode('utf-8', errors='ignore')
+    url = f'https://api.github.com/repos/{full_name}/zipball/{branch}'
+    headers = {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': f'token {github_token}',
+    }
+    return _download_and_extract_zipball(url, headers, folder_path)
 
 
 def import_public_folder_from_repo(full_name, folder_path, branch=None, github_token=None):
-    """Import .py files from a public repo without user OAuth token."""
+    """Import .py files from a public repo using GitHub Archive API (single HTTP request)."""
     # Get repo to find default branch
     repo_data = _fetch_public_repo_api(full_name)
     branch = branch or repo_data.get('default_branch') or 'main'
-    files = []
 
-    def fetch_contents(path):
-        try:
-            contents = _fetch_contents_api(full_name, path, branch)
-            for item in contents:
-                if item['type'] == 'dir':
-                    fetch_contents(item['path'])
-                elif item['type'] == 'file' and item['name'].endswith('.py'):
-                    content = _fetch_file_content_api(full_name, item['path'], branch)
-                    if content:
-                        files.append({'file_path': item['path'], 'content': content})
-        except Exception as e:
-            from django.conf import settings
-            if getattr(settings, 'DEBUG', False):
-                print(f"Error fetching {path}: {e}")
+    # Use GITHUB_API_TOKEN if available, otherwise download as public
+    api_token = github_token or getattr(settings, 'GITHUB_API_TOKEN', None)
+    headers = {'Accept': 'application/vnd.github+json'}
+    if api_token and api_token.strip():
+        headers['Authorization'] = f'token {api_token}'
+        url = f'https://api.github.com/repos/{full_name}/zipball/{branch}'
+    else:
+        # Fallback to direct download URL (no auth needed, no rate limiting)
+        url = f'https://github.com/{full_name}/archive/refs/heads/{branch}.zip'
 
-    start = folder_path.lstrip('/') if folder_path and folder_path != '/' else ''
-    fetch_contents(start)
-    return files
+    return _download_and_extract_zipball(url, headers, folder_path)

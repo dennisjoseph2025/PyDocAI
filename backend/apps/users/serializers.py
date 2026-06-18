@@ -52,10 +52,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class AdminUserSerializer(UserSerializer):
-    project_count = serializers.IntegerField(read_only=True)
+    project_count    = serializers.IntegerField(read_only=True)
+    published_count  = serializers.IntegerField(read_only=True)
+    github_connected = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + ['project_count']
+        fields = UserSerializer.Meta.fields + ['project_count', 'published_count', 'github_connected']
+
+    def get_github_connected(self, obj):
+        return bool(obj.github_token)
 
 
 class ChangePasswordSerializer(serializers.Serializer):

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { getProjects, deleteProject } from '../api'
 import useAuth from '../hooks/useAuth'
@@ -7,16 +7,19 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import LoadingSpinner from '../components/LoadingSpinner'
 import Pagination from '../components/Pagination'
+import { MODES } from '../config/themes'
 import {
   IconFolder, IconSparkles, IconFile, IconTrash,
   IconSearch, IconCode, IconLink, IconClock, IconEdit,
-  IconChartIncreasing // Added for the Admin Dashboard button
+  IconGlobe,
+  IconChartIncreasing
 } from '../components/Icons'
 
 const PAGE_SIZE = 10
 
 export default function Dashboard() {
   const { user, addToast } = useAuth()
+  const navigate = useNavigate()
 
   const pageTitle = `${user?.name || 'My Projects'} — PyDocAI`
 
@@ -31,6 +34,7 @@ export default function Dashboard() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+  const [confirmDelete, setConfirmDelete] = useState(null)
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -46,7 +50,11 @@ export default function Dashboard() {
       try {
         const params = { page, page_size: PAGE_SIZE }
         if (debouncedSearch) params.search = debouncedSearch
-        if (filterType !== 'all') params.source_type = filterType
+        if (filterType === 'published') {
+          params.is_published = true
+        } else if (filterType !== 'all') {
+          params.source_type = filterType
+        }
 
         const res = await getProjects(params)
 
@@ -84,10 +92,14 @@ export default function Dashboard() {
 
   const handleDelete = async (id, e) => {
     e.preventDefault()
-    if (!window.confirm('Are you sure you want to delete this project?')) return
+    setConfirmDelete(id)
+  }
+
+  const confirmDeleteProject = async () => {
+    if (!confirmDelete) return
     try {
-      await deleteProject(id)
-      setProjects(prev => prev.filter(p => p.id !== id))
+      await deleteProject(confirmDelete)
+      setProjects(prev => prev.filter(p => p.id !== confirmDelete))
       setTotalCount(prev => prev - 1)
       addToast('Project deleted successfully', 'success')
       if (projects.length === 1 && page > 1) {
@@ -96,6 +108,7 @@ export default function Dashboard() {
     } catch (error) {
       addToast('Failed to delete project', 'error')
     }
+    setConfirmDelete(null)
   }
 
   const sourceCounts = {}
@@ -111,6 +124,8 @@ export default function Dashboard() {
         <meta name="robots" content="noindex, follow" />
       </Helmet>
       <Navbar />
+
+
 
       <div className="flex-1 max-w-[1400px] w-full mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
 
@@ -180,6 +195,13 @@ export default function Dashboard() {
                 </div>
                 <span className="text-lg font-bold text-accent-blue font-display">{sourceCounts['file'] ?? 0}</span>
               </div>
+              <div className="bg-bg-surface p-3 rounded-xl border border-border">
+                <div className="flex items-center gap-1.5">
+                  <IconGlobe className="w-3 h-3 text-accent" />
+                  <span className="text-[10px] text-ink-muted uppercase">Published</span>
+                </div>
+                <span className="text-lg font-bold text-accent font-display">{stats?.published ?? 0}</span>
+              </div>
             </div>
           </div>
         </aside>
@@ -188,12 +210,12 @@ export default function Dashboard() {
           <div className="glass-card p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-2xl font-display font-bold text-ink-primary">Python Workspaces</h1>
+                <h1 className="text-2xl font-display font-bold text-ink-primary">Workspaces</h1>
                 <p className="text-sm text-ink-secondary">Manage and browse generated documentation suites</p>
               </div>
 
               <div className="flex bg-bg-surface p-1 rounded-lg border border-border text-xs font-mono">
-                {['all', 'folder', 'github', 'file'].map(t => (
+                {['all', 'folder', 'github', 'file', 'published'].map(t => (
                   <button
                     key={t}
                     onClick={() => handleFilterChange(t)}
@@ -243,12 +265,31 @@ export default function Dashboard() {
                     >
                       <div>
                         <div className="flex items-start justify-between mb-3">
-                          <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${project.source_type === 'github' ? 'text-success border-success/30 bg-success/5' :
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${
+                            project.source_type === 'github' ? 'text-success border-success/30 bg-success/5' :
                             project.source_type === 'folder' ? 'text-warning border-warning/30 bg-warning/5' :
-                              'text-accent-blue border-accent-blue/30 bg-accent-blue/5'
-                            }`}>
-                            {project.source_type || 'files'}
+                            project.source_type === 'file' ? 'text-accent-blue border-accent-blue/30 bg-accent-blue/5' :
+                            MODES[project.source_type] ? `${MODES[project.source_type].accent} ${MODES[project.source_type].border} ${MODES[project.source_type].accentBgSoft}` :
+                            'text-ink-muted border-border bg-bg-surface'
+                          }`}>
+                            {project.source_type === 'github' ? 'GitHub' :
+                             project.source_type === 'folder' ? 'Folder' :
+                             project.source_type === 'file' ? 'File' :
+                             MODES[project.source_type] ? MODES[project.source_type].label :
+                             project.source_type || 'files'}
                           </span>
+                            {project.is_published && (
+                              <span
+                                onClick={(e) => { e.preventDefault(); navigate(`/public/${project.public_slug}`) }}
+                                className="text-accent bg-accent/5 border border-accent/20 px-2 py-0.5 rounded text-[10px] font-mono uppercase flex items-center gap-1 hover:bg-accent/10 cursor-pointer transition-colors"
+                                title="View published documentation"
+                              >
+                                <IconGlobe className="w-3 h-3" />
+                                published
+                              </span>
+                            )}
+                          </div>
 
                           <button
                             onClick={(e) => handleDelete(project.id, e)}
@@ -296,6 +337,31 @@ export default function Dashboard() {
       </div>
 
       <Footer />
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-bg-elevated border border-border rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-8 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-danger/20 border border-danger/30 flex items-center justify-center text-danger text-lg font-bold">!</div>
+              <div>
+                <h3 className="text-base font-display font-bold text-ink-primary">Delete Project</h3>
+                <p className="text-[11px] text-ink-muted font-mono">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-xs text-ink-secondary font-mono leading-relaxed">
+              Are you sure you want to permanently delete this workspace?
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 px-4 rounded-xl border border-border bg-bg-surface hover:bg-bg-primary text-ink-primary text-xs font-mono transition-all">
+                Cancel
+              </button>
+              <button onClick={confirmDeleteProject} className="flex-1 py-2.5 px-4 rounded-xl bg-danger hover:bg-danger/80 text-white text-xs font-mono transition-all">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -6,10 +6,11 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkGfm from 'remark-gfm'
 import mermaid from 'mermaid'
-import { getProjectDetail } from '../api'
+import { getProjectDetail, publishProject } from '../api'
 import useAuth from '../hooks/useAuth'
 import Navbar from '../components/Navbar'
 import LoadingSpinner from '../components/LoadingSpinner'
+import CommentSection from '../components/CommentSection'
 import {
   IconWarning, IconFile, IconX, IconBook, IconPuzzle,
   IconDatabase, IconClipboard, IconCheck, IconDownload,
@@ -31,6 +32,8 @@ function sanitizeMermaid(chart) {
   sanitized = sanitized.replace(/-->>/g, '-->')
   sanitized = sanitized.replace(/-\.->\|([^|]*)\|>/g, '-.->|$1|')
   sanitized = sanitized.replace(/==>\|([^|]*)\|>/g, '==>|$1|')
+  sanitized = sanitized.replace(/=>>/g, '==>')
+  sanitized = sanitized.replace(/-\.->>/g, '-.->')
   const firstLine = sanitized.trimStart().split('\n')[0].trim()
   const validTypes = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|gantt|pie|erDiagram|journey|gitGraph|quadrantChart|requirementDiagram)/i
   if (!validTypes.test(firstLine)) {
@@ -47,10 +50,23 @@ function normalizeMarkdown(text) {
   if (!text) return text
   let normalized = text.replace(/\\n/g, '\n')
   normalized = normalized.replace(/\n?\s*code\s*\n\s*Copy\s*\n?/g, '\n')
-  normalized = normalized.replace(/(^|\n)mermaid\s*\n(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|gantt|pie|erDiagram|journey|gitGraph)/g, '$1```mermaid\n$2')
-  normalized = normalized.replace(/(^|\n)((?:flowchart|graph)\s+(?:TD|LR|RL|BT)[\s\S]+?)(?=\n{2,}|\n#{1,6}\s|$)/g, '$1```mermaid\n$2\n```')
-  normalized = normalized.replace(/```mermaid\n([\s\S]*?)(\n##|\n###|\n#|\n---\n|$)/g, (match, content, ending) => {
+  normalized = normalized.replace(/(^|\n)mermaid\s*\n(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|gantt|pie|erDiagram|journey|gitGraph)/g, (match, prefix, diagramType, offset) => {
+    const before = normalized.substring(0, offset + prefix.length)
+    const backtickCount = (before.match(/```/g) || []).length
+    if (backtickCount % 2 !== 0) return match
+    return prefix + '```mermaid\n' + diagramType
+  })
+  normalized = normalized.replace(/(^|\n)((?:flowchart|graph)\s+(?:TD|LR|RL|BT)[\s\S]+?)(?=\n{2,}|\n#{1,6}\s|$)/g, (match, prefix, diagram, offset) => {
+    const before = normalized.substring(0, offset + prefix.length)
+    const backtickCount = (before.match(/```/g) || []).length
+    if (backtickCount % 2 !== 0) return match
+    return prefix + '```mermaid\n' + diagram + '\n```'
+  })
+  normalized = normalized.replace(/```mermaid\n([\s\S]*?)(\n##|\n###|\n#|\n---\n|\n```|$)/g, (match, content, ending) => {
     const trimmed = content.trim()
+    if (ending && ending.startsWith('\n```')) {
+      return '```mermaid\n' + trimmed + ending
+    }
     if (trimmed.endsWith('```')) {
       return '```mermaid\n' + trimmed + '\n' + ending
     }
@@ -249,9 +265,16 @@ export default function Output() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('readme')
   const [copyLabel, setCopyLabel] = useState('COPY_MD()')
+  const [publishing, setPublishing] = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
 
   const rawContent = project ? project[DOC_TABS.find(t => t.id === activeTab)?.field] || '' : ''
-  const activeContent = normalizeMarkdown(rawContent.replace(/^```(?:markdown|md)?\s*\n/, '').replace(/\n```\s*$/, ''))
+  const hasOuterFence = /^```(?:markdown|md)?\s*\n/.test(rawContent)
+  const activeContent = normalizeMarkdown(
+    hasOuterFence
+      ? rawContent.replace(/^```(?:markdown|md)?\s*\n/, '').replace(/\n```\s*$/, '')
+      : rawContent
+  )
 
   const load = useCallback(async () => {
     try {
@@ -308,6 +331,29 @@ export default function Output() {
     URL.revokeObjectURL(url)
   }
 
+  const handlePublishToggle = async () => {
+    setPublishing(true)
+    try {
+      const res = await publishProject(project.id, { is_published: !project.is_published })
+      setProject(res.data)
+      addToast(project.is_published ? 'Project unpublished.' : 'Project published!', 'success')
+    } catch {
+      addToast('Failed to update publish status.', 'error')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  const handleCopyShareLink = () => {
+    const url = `${window.location.origin}/public/${project.public_slug}`
+    navigator.clipboard.writeText(url)
+    setShareCopied(true)
+    setTimeout(() => setShareCopied(false), 2000)
+    addToast('Share link copied!', 'success')
+  }
+
+  const shareUrl = project?.is_published ? `${window.location.origin}/public/${project.public_slug}` : null
+
   if (loading && !project) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
@@ -337,8 +383,8 @@ export default function Output() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* ── LEFT SIDEBAR ── */}
-        <aside className="w-72 flex-shrink-0 border-r border-border bg-[#0b1320] flex flex-col">
-          <div className="p-5 flex-1 overflow-y-auto custom-scrollbar">
+        <aside className="w-72 flex-shrink-0 border-r border-border bg-[#0b1320] flex flex-col overflow-y-auto">
+          <div className="p-5">
             <div className="font-mono text-[10px] text-ink-muted uppercase tracking-widest border-b border-border/40 pb-2">
               Workspace Properties
             </div>
@@ -357,47 +403,81 @@ export default function Output() {
               <div>
                 <span className="text-[10px] text-ink-muted uppercase">SOURCE</span>
                 <p className="text-ink-secondary">{project.source_type}</p>
+                {project.github_url && (
+                  <a
+                    href={project.github_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent-blue hover:text-accent text-[10px] font-mono truncate block mt-1"
+                  >
+                    {project.github_url.replace(/^https?:\/\/github\.com\//, '')}
+                    {project.github_branch && <span className="text-ink-muted"> ({project.github_branch})</span>}
+                  </a>
+                )}
               </div>
             </div>
 
             {isDone && (
-              <div className="space-y-3 pt-4 mt-4 border-t border-border/40">
-                <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block">Module index</span>
-                <nav className="space-y-1">
-                  {DOC_TABS.map((tab) => {
-                    const hasContent = !!project[tab.field]?.trim()
-                    return (
-                      <button
-                        key={tab.id}
-                        disabled={!hasContent}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-mono transition-all duration-150 ${
-                          activeTab === tab.id && hasContent
-                            ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/30'
-                            : hasContent
-                            ? 'text-ink-secondary hover:bg-bg-elevated/50'
-                            : 'text-ink-muted opacity-40 cursor-not-allowed'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    )
-                  })}
-                </nav>
-              </div>
+              <>
+                <div className="space-y-3 pt-4 mt-4 border-t border-border/40">
+                  <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block">Module index</span>
+                  <nav className="space-y-1">
+                    {DOC_TABS.map((tab) => {
+                      const hasContent = !!project[tab.field]?.trim()
+                      return (
+                        <button
+                          key={tab.id}
+                          disabled={!hasContent}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-mono transition-all duration-150 ${
+                            activeTab === tab.id && hasContent
+                              ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/30'
+                              : hasContent
+                              ? 'text-ink-secondary hover:bg-bg-elevated/50'
+                              : 'text-ink-muted opacity-40 cursor-not-allowed'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      )
+                    })}
+                  </nav>
+                </div>
+
+                <div className="mt-6 space-y-2">
+                  <button onClick={handleCopy} className="btn-ghost w-full py-2.5 text-xs font-mono">
+                    {copyLabel}
+                  </button>
+                  <button onClick={handleDownload} className="btn-accent w-full py-2.5 text-xs font-mono">
+                    DOWNLOAD_FILE()
+                  </button>
+                </div>
+
+                {/* Publish / Share */}
+                <div className="pt-4 mt-4 border-t border-border/40 space-y-2">
+                  <button
+                    onClick={handlePublishToggle}
+                    disabled={publishing}
+                    className={`w-full py-2.5 text-xs font-mono rounded-lg transition-colors ${
+                      project.is_published
+                        ? 'bg-success/10 text-success border border-success/30 hover:bg-success/20'
+                        : 'bg-bg-elevated text-ink-secondary border border-border hover:text-ink-primary'
+                    }`}
+                  >
+                    {publishing ? '...' : project.is_published ? 'Published' : 'Publish'}
+                  </button>
+                  {shareUrl && (
+                    <button
+                      onClick={handleCopyShareLink}
+                      className="w-full py-2 text-xs font-mono text-accent-blue hover:text-accent transition-colors flex items-center justify-center gap-1"
+                    >
+                      {shareCopied ? 'Copied!' : 'Copy share link'}
+                    </button>
+                  )}
+                </div>
+              </>
             )}
           </div>
-
-          {isDone && (
-            <div className="p-6 border-t border-border/40 space-y-2">
-              <button onClick={handleCopy} className="btn-ghost w-full py-2.5 text-xs font-mono">
-                {copyLabel}
-              </button>
-              <button onClick={handleDownload} className="btn-accent w-full py-2.5 text-xs font-mono">
-                DOWNLOAD_FILE()
-              </button>
-            </div>
-          )}
         </aside>
 
         {/* IDE Document View Window */}
@@ -417,6 +497,12 @@ export default function Output() {
             ) : (
               <div className="glass-card bg-code/40 border border-border rounded-2xl p-8 shadow-2xl">
                 <VsCodeMarkdown markdown={activeContent} />
+              </div>
+            )}
+
+            {isDone && project.is_published && (
+              <div className="mt-8">
+                <CommentSection projectId={project.id} isPublic={false} />
               </div>
             )}
           </div>

@@ -1,0 +1,124 @@
+from django.conf import settings
+
+from .models import Notification
+from .tasks import send_email_task
+
+
+def _snippet(text, maxlen=80):
+    if not text:
+        return ''
+    return text[:maxlen] + ('...' if len(text) > maxlen else '')
+
+
+def notify_comment(comment):
+    project = comment.project
+    owner = project.user
+    if owner == comment.user:
+        return
+
+    commenter = comment.user.name or comment.user.email
+    snippet = _snippet(comment.content)
+    message = f'{commenter} commented on "{project.name}": "{snippet}"'
+    Notification.objects.create(user=owner, comment=comment, message=message)
+
+    if settings.EMAIL_HOST_USER:
+        public_url = f'{settings.SITE_URL}/public/{project.public_slug}#comment-{comment.id}'
+        send_email_task.delay(
+            subject=f'New comment on "{project.name}"',
+            message=comment.content,
+            recipient_list=[owner.email],
+            html_message=f'''<!DOCTYPE html>
+<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#080e17;margin:0;padding:0">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 20px">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#0b1320;border-radius:16px;overflow:hidden;border:1px solid #1e293b">
+<tr><td style="padding:0;border-bottom:1px solid #1e293b">
+<table width="100%" cellpadding="0" cellspacing="0"><tr>
+<td style="padding:20px 32px">
+<span style="font-size:18px;font-weight:700;color:#e2e8f0">Py<span style="color:#3b82f6">Doc</span><span style="color:#6366f1">AI</span></span>
+</td>
+<td style="padding:20px 32px;text-align:right">
+<span style="font-size:11px;color:#64748b;font-family:monospace">NEW_COMMENT</span>
+</td>
+</tr></table>
+</td></tr>
+<tr><td style="padding:32px 32px 0">
+<h2 style="margin:0 0 4px;font-size:20px;color:#e2e8f0;font-weight:600">New Comment</h2>
+<p style="margin:0 0 24px;font-size:13px;color:#64748b">
+on <strong style="color:#f1f5f9">{project.name}</strong> &middot; {commenter}
+</p>
+</td></tr>
+<tr><td style="padding:0 32px">
+<div style="background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:16px;font-size:14px;color:#94a3b8;line-height:1.6;margin-bottom:24px;font-family:monospace">
+{comment.content}
+</div>
+</td></tr>
+<tr><td style="padding:0 32px 32px">
+<a href="{public_url}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:12px 28px;border-radius:8px;font-family:monospace">VIEW_COMMENT()</a>
+</td></tr>
+<tr><td style="padding:16px 32px;background:#0a0f1a;border-top:1px solid #1e293b">
+<p style="margin:0;font-size:12px;color:#64748b;font-family:monospace">PyDocAI &middot; AI-generated documentation</p>
+</td></tr>
+</table>
+</td></tr></table></body></html>''',
+        )
+
+
+def notify_reply(comment):
+    parent = comment.parent
+    if not parent or not parent.user:
+        return
+    if parent.user == comment.user:
+        return
+
+    project = comment.project
+    replier = comment.user.name or comment.user.email
+    snippet = _snippet(comment.content)
+    parent_snippet = _snippet(parent.content)
+    message = f'{replier} replied to your comment on "{project.name}": "{snippet}"'
+    Notification.objects.create(user=parent.user, comment=comment, message=message)
+
+    if settings.EMAIL_HOST_USER:
+        public_url = f'{settings.SITE_URL}/public/{project.public_slug}#comment-{comment.id}'
+        send_email_task.delay(
+            subject=f'New reply on "{project.name}"',
+            message=comment.content,
+            recipient_list=[parent.user.email],
+            html_message=f'''<!DOCTYPE html>
+<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#080e17;margin:0;padding:0">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 20px">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#0b1320;border-radius:16px;overflow:hidden;border:1px solid #1e293b">
+<tr><td style="padding:0;border-bottom:1px solid #1e293b">
+<table width="100%" cellpadding="0" cellspacing="0"><tr>
+<td style="padding:20px 32px">
+<span style="font-size:18px;font-weight:700;color:#e2e8f0">Py<span style="color:#3b82f6">Doc</span><span style="color:#6366f1">AI</span></span>
+</td>
+<td style="padding:20px 32px;text-align:right">
+<span style="font-size:11px;color:#64748b;font-family:monospace">NEW_REPLY</span>
+</td>
+</tr></table>
+</td></tr>
+<tr><td style="padding:32px 32px 0">
+<h2 style="margin:0 0 4px;font-size:20px;color:#e2e8f0;font-weight:600">New Reply</h2>
+<p style="margin:0 0 24px;font-size:13px;color:#64748b">
+on <strong style="color:#f1f5f9">{project.name}</strong> &middot; {replier}
+</p>
+</td></tr>
+<tr><td style="padding:0 32px">
+<div style="background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:16px;font-size:13px;color:#64748b;line-height:1.6;margin-bottom:16px;border-left:3px solid #334155;font-family:monospace">
+<strong style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Your comment:</strong>
+{parent.content}
+</div>
+<div style="background:#0f172a;border:1px solid #1e3a5f;border-radius:10px;padding:16px;font-size:14px;color:#e2e8f0;line-height:1.6;margin-bottom:24px;border-left:3px solid #2563eb;font-family:monospace">
+<strong style="font-size:11px;color:#3b82f6;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Reply:</strong>
+{comment.content}
+</div>
+</td></tr>
+<tr><td style="padding:0 32px 32px">
+<a href="{public_url}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:12px 28px;border-radius:8px;font-family:monospace">VIEW_REPLY()</a>
+</td></tr>
+<tr><td style="padding:16px 32px;background:#0a0f1a;border-top:1px solid #1e293b">
+<p style="margin:0;font-size:12px;color:#64748b;font-family:monospace">PyDocAI &middot; AI-generated documentation</p>
+</td></tr>
+</table>
+</td></tr></table></body></html>''',
+        )

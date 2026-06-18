@@ -1,101 +1,73 @@
 import base64
 import io
+import os
 import logging
-import shutil
-import tempfile
 import zipfile
 
 from celery import shared_task
 
-from apps.ai.generator import generate_file_docs, generate_folder_docs
-from apps.parser.ast_parser import parse_python_file
-from apps.parser.validators import should_exclude, validate_python_code
-from apps.projects.models import Project, ProjectFile
+from apps.parser.validators import should_exclude
+from apps.projects.models import Project
 
 logger = logging.getLogger(__name__)
 
+PARSER_URL = os.getenv("PARSER_URL", "http://fastapi-parser:8002")
+AI_URL = os.getenv("AI_URL", "http://fastapi-ai:8003")
+INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "pydocai-internal-key")
 
-@shared_task(bind=True, max_retries=5, default_retry_delay=30, rate_limit='5/m')
+
+def _call_fastapi(method: str, url: str, **kwargs):
+    import requests
+    headers = kwargs.pop("headers", {})
+    headers["X-Internal-Api-Key"] = INTERNAL_API_KEY
+    resp = requests.request(method, url, headers=headers, timeout=300, **kwargs)
+    resp.raise_for_status()
+    return resp.json()
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=30)
 def parse_folder_task(self, project_id, py_files, zip_base64=None, user_description=None, custom_info=None):
-    """
-    Async task to parse multiple Python files from a ZIP archive and generate AI docs.
-    Uses a unified, one-shot AI generation flow for efficiency.
-    """
     project = None
     try:
         project = Project.objects.get(id=project_id)
         project.status = Project.Status.PROCESSING
         project.save()
 
-        if user_description:
-            project.description = user_description
-
-        if custom_info:
-            project.custom_details = custom_info
-
-        project.save()
-
         if not zip_base64:
             project.status = Project.Status.FAILED
             project.error_message = "No ZIP data provided"
             project.save()
-            return {'error': 'No ZIP data provided'}
+            return {"error": "No ZIP data provided"}
 
         zip_data = base64.b64decode(zip_base64)
         zf = zipfile.ZipFile(io.BytesIO(zip_data))
 
-        # 1. Store individual files and parse AST (No AI yet)
-        results = []
+        parsed_count = 0
         for file_path in py_files:
             if should_exclude(file_path):
                 continue
             try:
-                content = zf.read(file_path).decode('utf-8', errors='ignore')
-                is_valid, _ = validate_python_code(content)
-                if not is_valid:
-                    continue
-
-                parsed = parse_python_file(content)
-                ProjectFile.objects.create(
-                    project=project,
-                    file_path=file_path,
-                    file_name=file_path.split('/')[-1],
-                    file_size=len(content),
-                    content=content,
-                    parsed_data=parsed,
-                    generated_docs='',
-                )
-                results.append({'file_path': file_path, 'parsed': parsed})
+                content = zf.read(file_path).decode("utf-8", errors="ignore")
+                files = {"file": (file_path.split("/")[-1], content.encode("utf-8"), "text/x-python")}
+                data = {"project_id": str(project_id), "name": project.name, "file_path": file_path}
+                _call_fastapi("POST", f"{PARSER_URL}/api/parser/file/", files=files, data=data)
+                parsed_count += 1
             except Exception as e:
-                logger.warning(f"Error processing {file_path}: {e}")
+                logger.warning(f"Error sending {file_path} to parser: {e}")
 
-        # 2. Unified Documentation Generation
-        temp_dir = tempfile.mkdtemp()
-        try:
-            zf.extractall(temp_dir)
+        ai_resp = _call_fastapi("POST", f"{AI_URL}/api/ai/generate/", json={"project_id": str(project_id)})
 
-            project_docs = generate_folder_docs(
-                folder_path=temp_dir,
-                project_name=project.name,
-                user_description=user_description,
-                custom_info=custom_info,
-                parsed_ast_data=results
-            )
+        project.refresh_from_db()
 
-            project.generated_docs = project_docs.get('summary', '')
-            project.readme_docs = project_docs.get('readme', '')
-            project.api_docs = project_docs.get('api_docs', '')
-            project.project_info = project_docs.get('project_info', {})
+        if ai_resp.get("status") == "failed":
+            project.status = Project.Status.FAILED
+            if not project.error_message:
+                project.error_message = ai_resp.get("error_message", "AI generation failed")
+        else:
             project.status = Project.Status.DONE
-            project.save()
+        project.save()
 
-        finally:
-            shutil.rmtree(temp_dir, ignore_errors=True)
-
-        return {
-            'project_id': str(project.id),
-            'files_count': len(results),
-        }
+        return {"project_id": str(project.id), "files_parsed": parsed_count}
 
     except Exception as e:
         logger.error(f"parse_folder_task error: {e}")
@@ -103,52 +75,41 @@ def parse_folder_task(self, project_id, py_files, zip_base64=None, user_descript
             project.status = Project.Status.FAILED
             project.error_message = str(e)
             project.save()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
-@shared_task(bind=True, max_retries=5, default_retry_delay=60, rate_limit='5/m')
+@shared_task(bind=True, max_retries=3, default_retry_delay=30)
 def parse_and_generate_docs_task(self, project_id, source_code, file_name, file_size):
-    """Async task to parse a single Python file and generate AI documentation."""
     project = None
     try:
         project = Project.objects.get(id=project_id)
         project.status = Project.Status.PROCESSING
         project.save()
 
-        is_valid, error_msg = validate_python_code(source_code)
-        if not is_valid:
+        files = {"file": (file_name, source_code.encode("utf-8"), "text/x-python")}
+        data = {"project_id": str(project_id), "name": project.name}
+        _call_fastapi("POST", f"{PARSER_URL}/api/parser/file/", files=files, data=data)
+
+        ai_resp = _call_fastapi("POST", f"{AI_URL}/api/ai/generate/", json={"project_id": str(project_id)})
+
+        project.refresh_from_db()
+
+        if ai_resp.get("status") == "failed":
             project.status = Project.Status.FAILED
-            project.error_message = error_msg
-            project.save()
-            return {'error': error_msg}
-
-        parsed = parse_python_file(source_code)
-        try:
-            generated_docs = generate_file_docs(parsed, file_name)
-        except Exception as e:
-            if 'rate_limit' in str(e).lower():
-                raise self.retry(exc=e, countdown=60)
-            raise e
-
-        ProjectFile.objects.create(
-            project=project,
-            file_name=file_name,
-            file_path=file_name,
-            file_size=file_size,
-            content=source_code,
-            parsed_data=parsed,
-            generated_docs=generated_docs,
-        )
-
-        project.generated_docs = generated_docs
-        project.status = Project.Status.DONE
+            if not project.error_message:
+                project.error_message = ai_resp.get("error_message", "AI generation failed")
+        else:
+            project.status = Project.Status.DONE
         project.save()
 
-        return {'project_id': str(project.id)}
+        return {"project_id": str(project.id)}
 
     except Exception as e:
+        if "rate_limit" in str(e).lower():
+            raise self.retry(exc=e, countdown=60)
+        logger.error(f"parse_and_generate_docs_task error: {e}")
         if project:
             project.status = Project.Status.FAILED
             project.error_message = str(e)
             project.save()
-        return {'error': str(e)}
+        return {"error": str(e)}

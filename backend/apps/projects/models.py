@@ -42,7 +42,13 @@ class Project(models.Model):
     api_docs       = models.TextField(blank=True, null=True)  # API Documentation
     project_info   = models.JSONField(blank=True, null=True)  # Project structure info
     custom_details = models.JSONField(blank=True, null=True)  # Extra user-provided context
+    framework_info = models.JSONField(blank=True, null=True)  # Auto-detected framework
     error_message  = models.TextField(blank=True, null=True)
+
+    # publish / share
+    is_published           = models.BooleanField(default=False)
+    public_slug            = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    published_description  = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -50,6 +56,13 @@ class Project(models.Model):
     class Meta:
         db_table = 'projects'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['source_type']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['is_published', 'created_at']),
+        ]
 
     def __str__(self):
         return f'{self.name} ({self.source_type}) — {self.user.email}'

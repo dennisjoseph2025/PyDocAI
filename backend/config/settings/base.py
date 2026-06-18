@@ -29,6 +29,10 @@ INSTALLED_APPS = [
     'apps.exports',
     'apps.admin_dashboard',
     'apps.feedback',
+    'apps.internal',
+    'apps.comments',
+    'apps.notifications',
+    'apps.universal',
 ]
 
 MIDDLEWARE = [
@@ -98,9 +102,20 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 6,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '30/hour',
+        'user': '1000/hour',
+        'comment_create': '20/hour',
+        'publish': '10/hour',
+        'public': '100/hour',
+    },
 }
 
-# ── JWT SETTINGS ────────────────────────────────────────────
+# JWT SETTINGS
 from datetime import timedelta
 
 SIMPLE_JWT = {
@@ -135,5 +150,6 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@pydocai.com')
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+SITE_URL = config('SITE_URL', default=FRONTEND_URL)
 
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour

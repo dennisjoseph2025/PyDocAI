@@ -1,5 +1,6 @@
 import requests
 from rest_framework import generics, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -98,9 +99,16 @@ class ChangePasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class AdminUserPage(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 200
+
+
 class UserListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class   = UserSerializer
+    pagination_class   = AdminUserPage
     search_fields = ['email', 'name', 'username']
     filterset_fields = ['role', 'is_verified', 'is_active']
     ordering_fields = ['created_at', 'email', 'name']
@@ -113,8 +121,11 @@ class UserListView(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_admin:
-            from django.db.models import Count
-            return User.objects.annotate(project_count=Count('projects')).all()
+            from django.db.models import Count, Q
+            return User.objects.annotate(
+                project_count=Count('projects'),
+                published_count=Count('projects', filter=Q(projects__is_published=True)),
+            ).all()
         return User.objects.none()
 
 
