@@ -2,7 +2,7 @@
 
 # PyDocAI
 
-### AI-Powered Python Documentation Generator
+### AI-Powered Documentation Generator for Any Language
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/dennisjoseph2025/PyDocAI?style=social)](https://github.com/dennisjoseph2025/PyDocAI/stargazers)
@@ -11,7 +11,7 @@
 [![Django](https://img.shields.io/badge/backend-Django-092E20?logo=django)](https://www.djangoproject.com/)
 [![React](https://img.shields.io/badge/frontend-React-61DAFB?logo=react)](https://react.dev/)
 
-**Upload your Python/Django code and let AI generate beautiful, comprehensive documentation in seconds.**
+**Upload your code and let AI generate beautiful, comprehensive documentation in seconds.**
 
 [🌐 Live Demo](https://pydocai.vercel.app) · [🐛 Report Bug](https://github.com/dennisjoseph2025/PyDocAI/issues) · [✨ Feature Request](https://github.com/dennisjoseph2025/PyDocAI/issues)
 
@@ -21,13 +21,16 @@
 
 ## Features
 
-- **🤖 AI-Powered Documentation** — Parses your code with Python AST and generates human-readable docs using Groq AI (with Gemini/Claude fallbacks)
-- **📁 Multiple Input Methods** — Upload single `.py` files, `.zip` archives, or connect a GitHub repository
-- **📊 Schema Generation** — Auto-compiled tables detailing database models, field types, constraints, and relationships
-- **🔗 Endpoint Mapping** — Automated REST API documentation with HTTP methods, path parameters, and JSON responses
+- **🤖 AI-Powered Documentation** — Parses your code and generates human-readable docs using Groq AI (with Gemini/Claude fallbacks)
+- **🌐 Universal Language Support** — Works with Python, JavaScript, TypeScript, Java, Go, Rust, and more via AI-driven analysis
+- **🐍 Python AST Mode** — Deep Python/Django code analysis with AST parsing for schema tables, endpoint mapping, and model relationships
+- **📁 Multiple Input Methods** — Upload single `.py` files, `.zip` archives, paste raw code, or connect a GitHub repository
+- **📊 Schema Generation** — Auto-compiled tables detailing database models, field types, constraints, and relationships (Python mode)
+- **🔗 Endpoint Mapping** — Automated REST API documentation with HTTP methods, path parameters, and JSON responses (Python mode)
 - **📝 Markdown Export** — Export documentation as clean Markdown, compatible with GitHub, GitLab, and VS Code
+- **📢 Publish & Share** — Publish documentation publicly with shareable links and community comments
 - **🔐 User Authentication** — JWT-based auth with GitHub OAuth, email/password registration, password reset
-- **📱 Responsive Design** — Dark-themed UI built with React 19, Tailwind CSS, and a cyberpunk/IDE aesthetic
+- **📱 Fully Responsive** — Mobile-first dark UI with slide-in sidebar navigation, works on phones, tablets, and desktops
 
 ## Tech Stack
 
