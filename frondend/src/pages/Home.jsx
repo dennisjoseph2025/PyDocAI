@@ -8,18 +8,18 @@ import CodeBlock from '../components/CodeBlock'
 import { IconBolt, IconBrain, IconTable, IconLink, IconRocket, IconArchive, IconCode, IconDatabase } from '../components/Icons'
 
 const pipelineSteps = [
-  { step: '01', command: 'git clone <repo>', title: 'INGEST_SOURCE', desc: 'Connect a Git repository, upload a local codebase archive, or input raw Python files directly.' },
-  { step: '02', command: 'pydocai analyze ./', title: 'PARSE_AST_TREE', desc: 'The engine parses models, views, serializers, and URLs to build a relational map of your Django architecture.' },
-  { step: '03', command: 'pydocai compile --md', title: 'GENERATE_MARKDOWN', desc: 'Receive standard Markdown files featuring field constraints, foreign key mappings, and endpoint specs.' },
+  { step: '01', command: 'Paste code | Upload project', title: 'ADD_YOUR_CODE', desc: 'Paste code from any language, upload a .zip, or connect a GitHub repo — everything works after a quick sign-up.' },
+  { step: '02', command: 'AI analyzes instantly', title: 'GET_SMART_DOCS', desc: 'Python/Django projects get deep AST analysis (models, views, serializers, endpoints). Other languages use Groq AI to generate intelligent, contextual documentation.' },
+  { step: '03', command: 'Publish | Share | Export', title: 'PUBLISH_AND_SHARE', desc: 'Publish your docs with a public slug link, share privately with teammates, export as Markdown, add comments, and manage everything from your dashboard.' },
 ]
 
 const modules = [
-  { icon: IconBolt, title: 'ASYNC_COMPILATION', desc: 'Upload your codebase and retrieve complete documentation payloads in seconds via optimized AST parsing.' },
-  { icon: IconBrain, title: 'AI_PATTERN_RECOGNITION', desc: 'Deep contextual understanding of complex Django patterns, DRF views, and nested serializers.' },
-  { icon: IconTable, title: 'SCHEMA_GENERATION', desc: 'Auto-compiled Markdown tables detailing database models, field types, constraints, and relationships.' },
-  { icon: IconLink, title: 'ENDPOINT_MAPPING', desc: 'Automated REST API documentation including allowed HTTP methods, path parameters, and JSON response bodies.' },
-  { icon: IconRocket, title: 'VS_CODE_COMPATIBLE', desc: 'Generated markdown is strictly formatted to render perfectly in GitHub, GitLab, and VS Code preview modes.' },
-  { icon: IconArchive, title: 'MULTI_SOURCE_INGESTION', desc: 'Supports direct .zip uploads, single .py files, and public/private GitHub repository linking.' },
+  { icon: IconBolt, title: 'UNIVERSAL_DOCS', desc: 'Paste code from any language — JavaScript, Rust, Go, Java, Python, C++, or anything else — and get AI-generated documentation instantly. No framework required.' },
+  { icon: IconBrain, title: 'DJANGO_DEEP_DOCS', desc: 'For Django/DRF projects, the engine parses models, views, serializers, and URLs via AST to produce structured, comprehensive docs with field constraints and relationships.' },
+  { icon: IconLink, title: 'PUBLIC_SHARING', desc: 'Generate a unique public link for any project. Share your documentation with teammates, clients, or the world — no login required to view.' },
+  { icon: IconRocket, title: 'MARKDOWN_EXPORT', desc: 'Download your documentation as clean, formatted Markdown. Renders perfectly in GitHub, GitLab, VS Code, and any Markdown viewer.' },
+  { icon: IconArchive, title: 'DASHBOARD', desc: 'All your documentation projects in one place. Create, view, edit, and manage docs from a central dashboard with full history.' },
+  { icon: IconTable, title: 'COMMENTS & NOTIFICATIONS', desc: 'Add comments to documentation for team feedback. Get notified when docs are updated or when someone replies to your comments.' },
 ]
 
 const sampleInput = `from django.db import models
@@ -52,7 +52,7 @@ const sampleFields = [
   { name: 'created_at', type: 'DateTimeField', const: 'auto_now_add', desc: 'Initial creation timestamp' },
 ]
 
-const techBadges = ['Django', 'DRF', 'Python 3.x', 'REST APIs', 'Models', 'Serializers', 'Views', 'URLs']
+const techBadges = ['Django', 'DRF', 'Python 3.x', 'Universal Mode', 'Any Language', 'No Install', 'Groq AI', 'Markdown']
 
 const siteUrl = 'https://pydocai.vercel.app'
 
@@ -62,7 +62,7 @@ const jsonLd = {
   name: 'PyDocAI',
   applicationCategory: 'DeveloperApplication',
   operatingSystem: 'Web',
-  description: 'AI-powered documentation generator for Python and Django projects. Upload code or connect a Git repo to generate beautiful, comprehensive documentation automatically.',
+  description: 'AI-powered documentation generator for Python, Django, and any programming language. Upload code or connect a Git repo to generate comprehensive documentation automatically.',
   url: siteUrl,
   author: { '@type': 'Organization', name: 'PyDocAI' },
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
@@ -76,14 +76,14 @@ export default function Home() {
   return (
     <div className="relative z-10 flex flex-col bg-bg-primary">
       <Helmet>
-        <title>PyDocAI — AI-Powered Python Documentation Generator</title>
-        <meta name="description" content="Upload your Django project and let AI produce beautiful, comprehensive docs — models, views, endpoints, and more. Free AI documentation generator for Python." />
+        <title>PyDocAI — AI-Powered Documentation Generator for Any Language</title>
+        <meta name="description" content="Upload your Django project or paste code from any language — AI generates beautiful, comprehensive docs. Free universal documentation generator." />
         <link rel="canonical" href={siteUrl} />
-        <meta property="og:title" content="PyDocAI — AI-Powered Python Documentation Generator" />
-        <meta property="og:description" content="Upload your Django project and let AI produce beautiful, comprehensive docs — models, views, endpoints, and more." />
+        <meta property="og:title" content="PyDocAI — AI-Powered Documentation Generator for Any Language" />
+        <meta property="og:description" content="Upload your Django project or paste code from any language — AI generates beautiful, comprehensive docs." />
         <meta property="og:url" content={siteUrl} />
-        <meta name="twitter:title" content="PyDocAI — AI-Powered Python Documentation Generator" />
-        <meta name="twitter:description" content="Upload your Django project and let AI produce beautiful, comprehensive docs — models, views, endpoints, and more." />
+        <meta name="twitter:title" content="PyDocAI — AI-Powered Documentation Generator for Any Language" />
+        <meta name="twitter:description" content="Upload your Django project or paste code from any language — AI generates beautiful, comprehensive docs." />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
       <Navbar />
@@ -104,7 +104,7 @@ export default function Home() {
             <span className="text-accent">generated</span>.
           </h1>
           <p className="text-lg md:text-xl text-ink-secondary text-center max-w-2xl mx-auto mt-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
-            Upload your Django project and let AI produce beautiful, comprehensive docs — models, views, endpoints, and more.
+            Upload your Django project <span className="text-ink-primary font-semibold">or</span> paste code from any language — AI generates beautiful, comprehensive docs in seconds.
           </p>
           <div className="flex gap-4 justify-center mt-10 animate-slide-up" style={{ animationDelay: '200ms' }}>
             {isAuthenticated ? (
