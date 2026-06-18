@@ -1,12 +1,17 @@
 from unittest.mock import patch
-from django.test import TestCase
+
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+
 from apps.projects.models import Project, ProjectFile
+from apps.universal.prompts import MAX_SOURCE_CHARS, get_prompt
 from apps.universal.tasks import (
-    _file_priority, _build_file_tree, _format_tree,
-    _detect_req_files, _validate_and_fix_output,
+    _build_file_tree,
+    _detect_req_files,
+    _file_priority,
+    _format_tree,
+    _validate_and_fix_output,
 )
-from apps.universal.prompts import get_prompt, MAX_SOURCE_CHARS
 
 User = get_user_model()
 

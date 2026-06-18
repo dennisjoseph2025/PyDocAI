@@ -7,7 +7,6 @@ from rest_framework.test import APITestCase
 
 from apps.parser.ast_parser import parse_python_file
 from apps.parser.validators import should_exclude, validate_python_code
-
 from apps.projects.models import Project
 
 User = get_user_model()
@@ -94,10 +93,11 @@ class ParserTaskTests(APITestCase):
     @patch('apps.parser.tasks._call_fastapi')
     def test_parse_folder_task_creates_files(self, mock_fastapi):
         """Test parse_folder_task sends files to FastAPI and updates project."""
-        from apps.parser.tasks import parse_folder_task
         import base64
         import io
         import zipfile
+
+        from apps.parser.tasks import parse_folder_task
         mock_fastapi.return_value = {"status": "done"}
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w') as zf:

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.universal.views import UniversalUploadView, UniversalStatusView
+from apps.universal.views import UniversalStatusView, UniversalUploadView
 
 urlpatterns = [
     path('upload/', UniversalUploadView.as_view(), name='universal-upload'),

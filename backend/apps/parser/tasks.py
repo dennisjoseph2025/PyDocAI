@@ -1,7 +1,7 @@
 import base64
 import io
-import os
 import logging
+import os
 import zipfile
 
 from celery import shared_task

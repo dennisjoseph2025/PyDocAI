@@ -5,11 +5,11 @@ import zipfile
 
 import requests
 from celery import shared_task
-from groq import Groq
 from django.conf import settings
+from groq import Groq
 
 from apps.projects.models import Project, ProjectFile
-from apps.universal.prompts import get_prompt, MAX_SOURCE_CHARS
+from apps.universal.prompts import MAX_SOURCE_CHARS, get_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -266,9 +266,8 @@ def _download_github_zipball(url: str, headers: dict, folder_path: str) -> list:
             if name.endswith('/'):
                 continue
             rel_path = name[len(prefix):] if prefix else name
-            if folder_path and folder_path != '/':
-                if not rel_path.startswith(folder_path.lstrip('/')):
-                    continue
+            if folder_path and folder_path != '/' and not rel_path.startswith(folder_path.lstrip('/')):
+                continue
             try:
                 content = zf.read(name).decode('utf-8', errors='ignore').replace('\x00', '')
                 files.append({'file_path': rel_path, 'content': content})
@@ -292,7 +291,8 @@ def _fetch_public_repo_api(full_name: str) -> dict:
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=30)
 def import_universal_github_task(self, project_id, mode, full_name, folder_path, branch, github_token=None):
-    """Download ALL files from a GitHub repo (any language), create ProjectFiles, then delegate to generate_universal_docs_task."""
+    """Download ALL files from a GitHub repo (any language), create ProjectFiles,
+    then delegate to generate_universal_docs_task."""
     project = None
     try:
         project = Project.objects.get(id=project_id)

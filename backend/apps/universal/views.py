@@ -1,6 +1,6 @@
+import logging
 import os
 import zipfile
-import logging
 
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -27,7 +27,10 @@ class UniversalUploadView(APIView):
 
         valid_modes = ['universal']
         if mode not in valid_modes:
-            return Response({'detail': f'Invalid mode. Choose from: {", ".join(valid_modes)}'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': f'Invalid mode. Choose from: {", ".join(valid_modes)}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         project = Project.objects.create(
             user=request.user,
@@ -62,7 +65,10 @@ class UniversalUploadView(APIView):
                 project.status = Project.Status.FAILED
                 project.error_message = "No file, GitHub URL, or source code provided."
                 project.save()
-                return Response({'detail': 'No file, GitHub URL, or source code provided.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'detail': 'No file, GitHub URL, or source code provided.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         project.save()
         generate_universal_docs_task.delay(str(project.id), mode)

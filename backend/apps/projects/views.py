@@ -1,14 +1,14 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Count
-from django.db import connection
 from django.core.cache import cache
+from django.db import connection
+from django.db.models import Count
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Project
-from .serializers import ProjectListSerializer, ProjectSerializer, PublicProjectSerializer, PublicProjectListSerializer
-from .throttles import PublishRateThrottle, PublicRateThrottle
+from .serializers import ProjectListSerializer, ProjectSerializer, PublicProjectListSerializer, PublicProjectSerializer
+from .throttles import PublicRateThrottle, PublishRateThrottle
 
 User = get_user_model()
 
