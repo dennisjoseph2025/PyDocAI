@@ -35,10 +35,8 @@ function nodeFetch(url, options = {}) {
 
 async function fetchAPI() {
   const attempts = [
-    process.env.SITEMAP_API_URL && `${process.env.SITEMAP_API_URL.replace(/\/+$/, '')}/api/public/projects/?limit=1000`,
-    'https://34.226.86.46:8000/api/public/projects/?limit=1000',
-    'http://34.226.86.46:8000/api/public/projects/?limit=1000',
-    `${SITE_URL}/api/public/projects/?limit=1000`,
+    process.env.SITEMAP_API_URL && `${process.env.SITEMAP_API_URL.replace(/\/+$/, '')}/public/projects/?limit=1000`,
+    'https://pydocai.duckdns.org/api/public/projects/?limit=1000',
   ].filter(Boolean)
 
   for (const url of attempts) {
