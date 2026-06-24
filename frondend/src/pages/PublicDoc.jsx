@@ -122,6 +122,8 @@ function MermaidDiagram({ chart }) {
   )
 }
 
+const siteUrl = 'https://pydocai.vercel.app'
+
 export default function PublicDoc() {
   const { slug } = useParams()
   const [project, setProject] = useState(null)
@@ -280,7 +282,34 @@ export default function PublicDoc() {
     <div className="min-h-screen bg-bg-primary flex flex-col">
       <Helmet>
         <title>{project.name} — PyDocAI</title>
-        <meta name="description" content={project.description || `Documentation for ${project.name}`} />
+        <meta name="description" content={project.description || `AI-generated documentation for ${project.name}. View models, endpoints, and API reference.`} />
+        <link rel="canonical" href={`${siteUrl}/public/${project.public_slug}`} />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={`${siteUrl}/public/${project.public_slug}`} />
+        <meta property="og:title" content={`${project.name} — PyDocAI Documentation`} />
+        <meta property="og:description" content={project.description || `AI-generated documentation for ${project.name} — models, endpoints, and API reference.`} />
+        <meta property="og:image" content={`${siteUrl}/pydocai-og.svg`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:site_name" content="PyDocAI" />
+        <meta property="og:locale" content="en_US" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${project.name} — PyDocAI`} />
+        <meta name="twitter:description" content={project.description || `AI-generated documentation for ${project.name}.`} />
+        <meta name="twitter:image" content={`${siteUrl}/pydocai-og.svg`} />
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'TechArticle',
+          headline: project.name,
+          description: project.description || `AI-generated documentation for ${project.name}`,
+          url: `${siteUrl}/public/${project.public_slug}`,
+          author: { '@type': 'Person', name: project.user_name || 'PyDocAI User' },
+          publisher: { '@type': 'Organization', name: 'PyDocAI' },
+          dateCreated: project.created_at,
+          dateModified: project.updated_at,
+          about: { '@type': 'SoftwareSourceCode', name: project.name },
+        })}</script>
       </Helmet>
       <Navbar />
 

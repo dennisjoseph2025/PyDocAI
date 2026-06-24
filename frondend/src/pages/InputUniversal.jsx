@@ -184,7 +184,11 @@ export default function InputUniversal() {
 
   return (
     <div className="relative z-10 bg-bg-primary min-h-screen text-ink-primary font-body">
-      <Helmet><title>New Generation — Universal Doc</title></Helmet>
+      <Helmet>
+        <title>New Generation — Universal Doc</title>
+        <meta name="description" content="Generate AI-powered documentation for any programming language. Upload code files or connect a GitHub repo — works with JavaScript, Rust, Go, Java, Python, and more." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <Navbar />
 
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col lg:flex-row gap-6 sm:gap-8">

@@ -247,7 +247,11 @@ export default function InputPython() {
 
   return (
     <div className="relative z-10 bg-bg-primary min-h-screen text-ink-primary font-body">
-      <Helmet><title>New Generation — Python Doc</title></Helmet>
+      <Helmet>
+        <title>New Generation — Python Doc</title>
+        <meta name="description" content="Generate AI-powered documentation for your Django or Python project. Upload a .zip, paste a GitHub URL, or upload a single .py file." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <Navbar />
 
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
