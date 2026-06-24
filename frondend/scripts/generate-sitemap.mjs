@@ -1,5 +1,7 @@
 import fs from 'fs'
 import path from 'path'
+import https from 'https'
+import http from 'http'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -9,17 +11,39 @@ const SITEMAP_PATH = path.join(PUBLIC_DIR, 'sitemap.xml')
 const SITE_URL = 'https://pydocai.vercel.app'
 const TODAY = new Date().toISOString().split('T')[0]
 
-async function fetchAPI(endpoint) {
-  const urls = [
-    process.env.SITEMAP_API_URL,
-    `${SITE_URL}/api/public/projects/?limit=1000`,
+function nodeFetch(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const mod = url.startsWith('https') ? https : http
+    const agent = url.startsWith('https') ? new https.Agent({ rejectUnauthorized: false }) : undefined
+    const req = mod.get(url, { ...options, agent, timeout: 8000 }, (res) => {
+      const chunks = []
+      res.on('data', (c) => chunks.push(c))
+      res.on('end', () => {
+        const body = Buffer.concat(chunks).toString()
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          const redirectUrl = new URL(res.headers.location, url).toString()
+          nodeFetch(redirectUrl, options).then(resolve).catch(reject)
+        } else {
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, body, json: () => JSON.parse(body) })
+        }
+      })
+    })
+    req.on('error', reject)
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')) })
+  })
+}
+
+async function fetchAPI() {
+  const attempts = [
+    process.env.SITEMAP_API_URL && `${process.env.SITEMAP_API_URL.replace(/\/+$/, '')}/api/public/projects/?limit=1000`,
+    'https://34.226.86.46:8000/api/public/projects/?limit=1000',
     'http://34.226.86.46:8000/api/public/projects/?limit=1000',
-  ]
-  for (const base of urls) {
-    if (!base) continue
+    `${SITE_URL}/api/public/projects/?limit=1000`,
+  ].filter(Boolean)
+
+  for (const url of attempts) {
     try {
-      const url = base.includes('/api/') ? base : `${base.replace(/\/+$/, '')}/api/public/projects/?limit=1000`
-      const res = await fetch(url, { signal: AbortSignal.timeout(5000) })
+      const res = await nodeFetch(url)
       if (res.ok) return await res.json()
     } catch {}
   }
@@ -28,18 +52,8 @@ async function fetchAPI(endpoint) {
 
 async function generate() {
   const urls = [
-    {
-      loc: `${SITE_URL}/`,
-      lastmod: TODAY,
-      changefreq: 'weekly',
-      priority: '1.0',
-    },
-    {
-      loc: `${SITE_URL}/published`,
-      lastmod: TODAY,
-      changefreq: 'daily',
-      priority: '0.9',
-    },
+    { loc: `${SITE_URL}/`, lastmod: TODAY, changefreq: 'weekly', priority: '1.0' },
+    { loc: `${SITE_URL}/published`, lastmod: TODAY, changefreq: 'daily', priority: '0.9' },
   ]
 
   try {
@@ -56,10 +70,12 @@ async function generate() {
           })
         }
       }
-      console.log(`Fetched ${projects.length} published projects from API`)
+      console.log(`Sitemap: fetched ${projects.length} published projects from API`)
+    } else {
+      console.log('Sitemap: API unreachable, using static URLs only')
     }
   } catch (e) {
-    console.warn('Could not fetch published projects, using static URLs only')
+    console.warn('Sitemap: error fetching API, using static URLs only')
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
