@@ -1,0 +1,97 @@
+from decouple import config
+
+from config.settings.base import *
+
+DEBUG = False
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT', default='5432'),
+        'CONN_MAX_AGE': 300,
+        'CONN_HEALTH_CHECKS': True,
+    }
+}
+
+CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+CSRF_TRUSTED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+# ── PRODUCTION SECURITY ─────────────────────────────────────
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = [
+    'rest_framework.throttling.AnonRateThrottle',
+    'rest_framework.throttling.UserRateThrottle',
+]
+REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
+    'anon': '100/day',
+    'user': '1000/hour',
+    'comment_create': '20/hour',
+    'publish': '10/hour',
+    'public': '100/hour',
+}
+
+# ── S3 STATIC & MEDIA FILES ──────────────────────────────────
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=None)
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=None)
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default=None)
+AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1')
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_VERIFY = True
+
+if AWS_STORAGE_BUCKET_NAME:
+    STORAGES = {
+        "default": {
+            "BACKEND": "config.storage_backends.MediaStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3.S3StaticStorage",
+        },
+    }
+    cloudfront_domain = config('AWS_CLOUDFRONT_DOMAIN', default=None)
+    if cloudfront_domain:
+        STATIC_URL = f'https://{cloudfront_domain}/static/'
+        MEDIA_URL = f'https://{cloudfront_domain}/media/'
+    else:
+        STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/static/'
+        MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/media/'
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": config('CELERY_BROKER_URL'),
+        "TIMEOUT": 300,
+    }
+}
+
+# ── JSON LOGGING IN PRODUCTION ──────────────────────────────
+LOGGING['handlers']['console']['formatter'] = 'json'
+LOGGING['root']['level'] = 'WARNING'

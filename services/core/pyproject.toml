@@ -1,0 +1,75 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "celery>=5.6.3",
+    "django>=5.2.13",
+    "django-cors-headers>=4.9.0",
+    "django-environ>=0.13.0",
+    "djangorestframework>=3.17.1",
+    "djangorestframework-simplejwt>=5.5.1",
+    "google-genai>=1.74.0",
+    "groq>=1.2.0",
+    "markdown>=3.10.2",
+    "psycopg2-binary>=2.9.12",
+    "pygithub>=2.9.1",
+    "python-decouple>=3.8",
+    "python-dotenv>=1.2.2",
+    "python-json-logger>=3.0.0",
+    "redis>=7.4.0",
+    "requests>=2.31.0",
+    "gunicorn>=23.0.0",
+    "gevent>=24.10.1,<26",
+    "weasyprint>=68.1",
+    "tomli>=2.0.1",
+    "anthropic>=0.45.0",
+    "django-anymail>=15.0",
+    "django-filter>=25.2",
+    "drf-spectacular>=0.28.0",
+    "whitenoise>=6.7.0",
+    "django-storages>=1.14.0",
+    "boto3>=1.34.0",
+    "pytest>=8.0",
+    "pytest-django>=4.9",
+    "coverage>=7.6",
+    "ruff>=0.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.9",
+    "coverage>=7.6",
+    "ruff>=0.8",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+ignore = ["E501", "SIM102"]
+
+[tool.ruff.lint.per-file-ignores]
+"*/migrations/*" = ["E501"]
+"apps/universal/prompts.py" = ["E501"]
+"config/settings/*" = ["F403", "F405", "E402"]
+"apps/github_integration/tasks.py" = ["SIM105", "B904"]
+"apps/exports/views.py" = ["B904"]
+"apps/parser/tasks.py" = ["B904"]
+"apps/parser/ast_parser.py" = ["SIM102"]
+"apps/github_integration/views.py" = ["E501"]
+"apps/parser/views.py" = ["E501"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.development"
+testpaths = ["apps"]
+python_files = ["tests.py", "test_*.py"]
+
+[tool.coverage.run]
+source = ["apps"]
+omit = ["*/migrations/*", "*/tests*"]

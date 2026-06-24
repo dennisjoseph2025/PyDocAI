@@ -1,0 +1,13 @@
+Hi {{ user.name }},
+
+Thank you for sharing your feedback with us! Here's a copy of what you submitted:
+
+Category: {{ feedback.get_category_display }}
+Message: {{ feedback.message }}
+
+Our team will review your feedback and get back to you if needed. You can track responses in your profile.
+
+View your feedback: {{ frontend_url }}/my-feedback
+
+Thanks,
+The PyDocAI Team
