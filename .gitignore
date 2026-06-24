@@ -19,3 +19,7 @@ frondend/call_mcp.js
 ARCHITECTURE.md
 social-posts.md
 .vercel
+analyze_icon.py
+gen_favicons*.py
+fix_favicon.py
+remove_bg.py
