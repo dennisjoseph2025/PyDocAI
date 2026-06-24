@@ -4,7 +4,6 @@ import pytest
 
 from apps.notifications.models import Notification
 
-
 pytestmark = pytest.mark.django_db
 
 
@@ -37,20 +36,24 @@ class TestNotifyComment:
         from apps.comments.models import Comment
         comment = Comment.objects.create(project=project, user=other_user, content='Nice!')
         from apps.notifications.utils import notify_comment
-        with patch('django.conf.settings.EMAIL_HOST_USER', 'test@example.com'):
-            with patch('apps.notifications.utils.send_email_task.delay') as mock:
-                notify_comment(comment)
-                mock.assert_called_once()
-                args = mock.call_args[1]
-                assert 'New comment' in args['subject']
-                assert project.user.email in args['recipient_list']
+        with (
+            patch('django.conf.settings.EMAIL_HOST_USER', 'test@example.com'),
+            patch('apps.notifications.utils.send_email_task.delay') as mock,
+        ):
+            notify_comment(comment)
+            mock.assert_called_once()
+            args = mock.call_args[1]
+            assert 'New comment' in args['subject']
+            assert project.user.email in args['recipient_list']
 
     def test_skips_email_when_not_configured(self, project, other_user):
         from apps.comments.models import Comment
         comment = Comment.objects.create(project=project, user=other_user, content='Nice!')
         from apps.notifications.utils import notify_comment
-        with patch('django.conf.settings.EMAIL_HOST_USER', None):
-            with patch('apps.notifications.utils.send_email_task.delay') as mock:
+        with (
+            patch('django.conf.settings.EMAIL_HOST_USER', None),
+            patch('apps.notifications.utils.send_email_task.delay') as mock,
+        ):
                 notify_comment(comment)
                 mock.assert_not_called()
 
@@ -92,8 +95,10 @@ class TestNotifyReply:
         parent = Comment.objects.create(project=project, user=other_user, content='Original')
         reply = Comment.objects.create(project=project, user=project.user, parent=parent, content='Reply')
         from apps.notifications.utils import notify_reply
-        with patch('django.conf.settings.EMAIL_HOST_USER', 'test@example.com'):
-            with patch('apps.notifications.utils.send_email_task.delay') as mock:
+        with (
+            patch('django.conf.settings.EMAIL_HOST_USER', 'test@example.com'),
+            patch('apps.notifications.utils.send_email_task.delay') as mock,
+        ):
                 notify_reply(reply)
                 mock.assert_called_once()
                 assert 'New reply' in mock.call_args[1]['subject']

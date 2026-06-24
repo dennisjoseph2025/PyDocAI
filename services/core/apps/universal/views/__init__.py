@@ -1,5 +1,5 @@
-from .upload import UniversalUploadView
 from .status import UniversalStatusView
+from .upload import UniversalUploadView
 
 __all__ = [
     'UniversalUploadView',

@@ -1,4 +1,3 @@
-import pytest
 
 from apps.comments.serializers import CommentCreateSerializer, CommentSerializer
 
@@ -14,7 +13,7 @@ class TestCommentSerializer:
         assert 'parent_content' in serializer.data
 
     def test_serialize_with_replies(self, comment, user, project):
-        reply = comment.replies.create(project=project, user=user, content='Reply')
+        comment.replies.create(project=project, user=user, content='Reply')
         serializer = CommentSerializer(comment)
         assert len(serializer.data['replies']) == 1
         assert serializer.data['replies'][0]['content'] == 'Reply'

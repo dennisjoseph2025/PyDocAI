@@ -1,4 +1,3 @@
-import pytest
 
 from apps.notifications.serializers import NotificationSerializer
 

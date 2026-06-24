@@ -1,5 +1,5 @@
-from .markdown import ExportProjectMarkdownView
 from .folder import ExportFolderDocsView
+from .markdown import ExportProjectMarkdownView
 
 __all__ = [
     'ExportProjectMarkdownView',

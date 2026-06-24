@@ -1,6 +1,6 @@
+from .projects import AdminProjectDetailView, AdminProjectListView, AdminUserProjectsView
 from .stats import AdminStatsView
-from .users import AdminUserListView, AdminUserDetailView, AdminUserDeleteView, AdminUserBlockView
-from .projects import AdminProjectListView, AdminUserProjectsView, AdminProjectDetailView
+from .users import AdminUserBlockView, AdminUserDeleteView, AdminUserDetailView, AdminUserListView
 
 __all__ = [
     'AdminStatsView',

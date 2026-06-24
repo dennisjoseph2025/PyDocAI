@@ -21,7 +21,7 @@
 
 ## Features
 
-- **🤖 AI-Powered Documentation** — Parses your code and generates human-readable docs using Groq AI (with Gemini/Claude fallbacks)
+- **🤖 AI-Powered Documentation** — Parses your code and generates human-readable docs using Groq AI
 - **🌐 Universal Language Support** — Works with Python, JavaScript, TypeScript, Java, Go, Rust, and more via AI-driven analysis
 - **🐍 Python AST Mode** — Deep Python/Django code analysis with AST parsing for schema tables, endpoint mapping, and model relationships
 - **📁 Multiple Input Methods** — Upload single `.py` files, `.zip` archives, paste raw code, or connect a GitHub repository
@@ -39,7 +39,7 @@
 | **Frontend** | React 19, Vite, TypeScript, Tailwind CSS, React Router |
 | **Backend** | Django 5, Django REST Framework, Celery, Redis |
 | **Database** | PostgreSQL |
-| **AI** | Groq API (LLaMA), Gemini/Claude fallbacks |
+| **AI** | Groq API (LLaMA) |
 | **Deployment** | Vercel (frontend), AWS EC2 + RDS + ElastiCache (backend) |
 
 ## Quick Start
@@ -52,6 +52,9 @@ docker-compose up --build -d
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8000
+- API Docs (Swagger): http://localhost:8080/api/docs/
+- Parser API Docs: http://localhost:8080/parser/docs/
+- AI API Docs: http://localhost:8080/ai/docs/
 
 ### Without Docker
 
@@ -90,69 +93,119 @@ npm run dev
   (.py/.js/.ts/...)   analyzes code      API / Architecture
 ```
 
+## Architecture
+
+```mermaid
+graph LR
+    F["React Frontend<br/>:5173"]:::frontend
+    N["Nginx<br/>:8080"]:::gateway
+    D["Django Core<br/>:8000"]:::api
+    R[("Redis")]:::data
+    C["Celery<br/>Worker"]:::worker
+    P["FastAPI<br/>Parser :8002"]:::fastapi
+    A["FastAPI<br/>AI :8003"]:::fastapi
+    PG[("PostgreSQL")]:::data
+    G["Groq API"]:::ext
+    GH["GitHub"]:::ext
+
+    F -->|1. upload code| N
+    N -->|/api/parser/| D
+    D -->|2. create project| PG
+    D -->|3. dispatch task| R
+    R --> C
+    C -->|4. AST parse| P
+    C -->|5. generate docs| A
+    P -->|parsed data| D
+    A -->|docs| D
+    A -.->|embeddings| PG
+    D -->|6. store result| PG
+    D -->|7. return docs| F
+    F -->|8. publish| N
+    N -->|publish| D
+    D -->|update visibility| PG
+    D -.->|OAuth| GH
+    A -.->|AI| G
+
+    classDef frontend fill:#0f172a,stroke:#38bdf8,color:#f8fafc;
+    classDef gateway fill:#1e1b4b,stroke:#a78bfa,color:#eef2ff;
+    classDef api fill:#064e3b,stroke:#34d399,color:#ecfdf5;
+    classDef data fill:#7f1d1d,stroke:#f87171,color:#fef2f2;
+    classDef worker fill:#1e3a5f,stroke:#60a5fa,color:#bfdbfe;
+    classDef fastapi fill:#831843,stroke:#f472b6,color:#fdf2f8;
+    classDef ext fill:#1c1917,stroke:#a8a29e,color:#fafaf9;
+```
+
+
 ## Project Structure
 
 ```
 PyDocAi/
-├── backend/                    # Django REST API
-│   ├── apps/
-│   │   ├── users/             # Auth & user management
-│   │   ├── projects/          # Project CRUD
-│   │   ├── parser/            # Python AST parsing
-│   │   ├── ai/               # AI documentation generation
-│   │   ├── universal/        # Universal code analysis
-│   │   ├── github_integration/# GitHub OAuth & repo fetching
-│   │   ├── exports/          # Markdown export
-│   │   ├── comments/         # Public doc comments
-│   │   ├── feedback/         # User feedback & ratings
-│   │   ├── admin_dashboard/  # Admin panel
-│   │   ├── notifications/    # User notifications
-│   │   └── internal/         # Internal utilities
-│   ├── services/
-│   │   ├── parser/           # FastAPI AST parsing service
-│   │   └── ai/               # FastAPI AI generation service
-│   ├── config/               # Django settings
-│   └── requirements/
-├── frondend/                  # React + Vite frontend
+├── deploy/
+│   └── nginx.conf              # Reverse proxy config
+├── services/
+│   ├── core/                   # Django monolith (API hub)
+│   │   ├── apps/               # 13 Django apps
+│   │   │   ├── users/          # Auth (JWT, GitHub OAuth, password reset)
+│   │   │   ├── projects/       # Project CRUD, publish, sharing
+│   │   │   ├── parser/         # Python AST parsing orchestration
+│   │   │   ├── ai/             # AI doc generation orchestration
+│   │   │   ├── universal/      # Universal code analysis
+│   │   │   ├── github_integration/ # GitHub repo fetching
+│   │   │   ├── exports/        # Markdown export
+│   │   │   ├── comments/       # Public doc comments
+│   │   │   ├── feedback/       # User feedback & admin replies
+│   │   │   ├── admin_dashboard/ # Admin stats & management
+│   │   │   ├── notifications/  # Email notifications
+│   │   │   ├── common/         # Shared utilities, health check
+│   │   │   └── internal/       # Inter-service communication
+│   │   ├── config/             # Django settings (base/dev/prod)
+│   │   ├── docker/             # Dockerfile + entrypoint.sh
+│   │   ├── env/                # .env + .env.example
+│   │   ├── seed/               # seed_admin.py
+│   │   ├── templates/emails/   # HTML email templates
+│   │   ├── requirements/       # Pip requirements
+│   │   └── manage.py
+│   ├── parser/                 # FastAPI microservice (AST parsing)
+│   │   ├── api/routes/         # file, folder, status, health
+│   │   ├── ast_parser.py       # Core AST logic
+│   │   ├── framework_detector.py
+│   │   ├── docker/Dockerfile
+│   │   └── main.py
+│   └── ai/                     # FastAPI microservice (AI generation)
+│       ├── api/routes/         # generate, status, health
+│       ├── services/           # groq, docs_builder, markdown, prompts
+│       ├── rag.py              # RAG-based code embedding
+│       ├── docker/Dockerfile
+│       └── main.py
+├── frondend/                   # React 19 + Vite + Tailwind
 │   └── src/
-│       ├── pages/            # Route pages (19 pages)
-│       ├── components/       # Reusable UI components
-│       ├── hooks/            # Custom React hooks
-│       ├── context/          # Auth context
-│       └── api/              # API client
+│       ├── pages/              # 19 route pages
+│       │   ├── Home, Login, Register, ForgotPassword, ResetPassword
+│       │   ├── Dashboard, Input, InputPython, InputUniversal
+│       │   ├── Output, Profile, GitHubCallback
+│       │   ├── Published, PublicDoc
+│       │   ├── FeedbackPage, MyFeedback
+│       │   ├── AdminUsers, AdminProjects, AdminFeedback
+│       ├── components/         # 14 reusable UI components
+│       ├── hooks/              # useAuth
+│       ├── context/            # AuthContext
+│       └── api/                # API client (index.js)
 ├── docker-compose.yml
-├── nginx/
+├── docker-compose.prod.yml
 └── README.md
 ```
 
-## API Overview
+## API Documentation
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/auth/register/` | POST | Register new user |
-| `/api/auth/login/` | POST | Login (JWT) |
-| `/api/auth/profile/` | GET/PUT | Get/update profile |
-| `/api/auth/password/reset/` | POST | Request password reset |
-| `/api/auth/github/login/` | POST | GitHub OAuth login |
-| `/api/projects/` | GET/POST | List / create projects |
-| `/api/projects/{id}/` | GET/PUT/DELETE | Project detail / update / delete |
-| `/api/projects/{id}/publish/` | POST | Toggle publish status |
-| `/api/parser/analyze-file/` | POST | Analyze single `.py` file (AST) |
-| `/api/parser/analyze-folder/` | POST | Analyze ZIP folder (AST) |
-| `/api/ai/generate/` | POST | Start AI documentation generation |
-| `/api/ai/status/{task_id}/` | GET | Poll generation status |
-| `/api/universal/analyze/` | POST | Analyze any code (universal mode) |
-| `/api/universal/status/{id}/` | GET | Poll universal analysis status |
-| `/api/github/repos/` | GET | List user's GitHub repos |
-| `/api/github/fetch/` | POST | Fetch repo contents |
-| `/api/exports/markdown/{id}/` | GET | Export as Markdown |
-| `/api/comments/` | GET/POST | List / create comments |
-| `/api/comments/{id}/` | DELETE | Delete comment |
-| `/api/feedback/` | GET/POST | List / submit feedback |
-| `/api/notifications/` | GET | List notifications |
-| `/api/public/projects/` | GET | List published projects |
-| `/api/public/projects/{slug}/` | GET | Get published project detail |
-| `/api/admin-dashboard/stats/` | GET | Admin dashboard stats |
+Full API reference with endpoint details, authentication, request/response examples, and error handling is available in [API_DOCS.md](API_DOCS.md).
+
+Interactive Swagger UI (when running via Docker):
+
+| Service | URL |
+|---------|-----|
+| Django Core API | `http://localhost:8080/api/docs/` |
+| Parser Service | `http://localhost:8080/parser/docs/` |
+| AI Service | `http://localhost:8080/ai/docs/` |
 
 ## Environment Variables
 

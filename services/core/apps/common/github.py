@@ -53,7 +53,7 @@ def fetch_public_tree_api(full_name, branch):
 
 def download_zipball(url, headers, folder_path, file_filter=None):
     """Download a GitHub zipball and extract files.
-    
+
     file_filter: optional callable(file_name) -> bool to filter files.
     By default (None), extracts ALL files except directories.
     """
