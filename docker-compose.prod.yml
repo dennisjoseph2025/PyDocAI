@@ -4,7 +4,7 @@ services:
         context: ./services/core
         dockerfile: docker/Dockerfile
       restart: always
-      command: ["bash", "docker/entrypoint.sh"]
+      command: ["/bin/sh", "docker/entrypoint.sh"]
       volumes:
         - ./services/core:/app
         - static_volume:/app/staticfiles
