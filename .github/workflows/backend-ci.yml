@@ -2,14 +2,14 @@ name: Backend CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
     paths:
-      - "backend/**"
+      - "services/core/**"
       - ".github/workflows/backend-ci.yml"
   pull_request:
     branches: [main]
     paths:
-      - "backend/**"
+      - "services/core/**"
 
 env:
   PYTHON_VERSION: "3.10"
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: services/core
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +28,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          cache-dependency-glob: backend/pyproject.toml
+          cache-dependency-glob: services/core/pyproject.toml
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         run: uv python pin ${{ env.PYTHON_VERSION }}
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: services/core
     steps:
       - uses: actions/checkout@v4
 
@@ -51,7 +51,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          cache-dependency-glob: backend/pyproject.toml
+          cache-dependency-glob: services/core/pyproject.toml
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         run: uv python pin ${{ env.PYTHON_VERSION }}
