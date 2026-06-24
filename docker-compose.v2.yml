@@ -38,7 +38,7 @@ services:
 
   fastapi-parser:
     build:
-      context: ./backend/services/parser
+      context: ./services/parser
       dockerfile: Dockerfile
     restart: always
     env_file:
@@ -56,7 +56,7 @@ services:
 
   fastapi-ai:
     build:
-      context: ./backend/services/ai
+      context: ./services/ai
       dockerfile: Dockerfile
     restart: always
     env_file:
