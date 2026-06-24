@@ -1,4 +1,3 @@
-import pytest
 from django.db import models as db_models
 
 from apps.comments.models import Comment

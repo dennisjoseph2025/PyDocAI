@@ -1,6 +1,6 @@
-from .auth import RegisterSerializer, LoginSerializer, GithubAuthSerializer
-from .profile import UserSerializer, AdminUserSerializer, ChangePasswordSerializer
-from .password_reset import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+from .auth import GithubAuthSerializer, LoginSerializer, RegisterSerializer
+from .password_reset import PasswordResetConfirmSerializer, PasswordResetRequestSerializer
+from .profile import AdminUserSerializer, ChangePasswordSerializer, UserSerializer
 
 __all__ = [
     'RegisterSerializer',

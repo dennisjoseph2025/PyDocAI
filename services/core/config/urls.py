@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from apps.common.health import health_check
 from apps.projects.urls import public_urlpatterns as public_project_urls
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 urlpatterns = [
     path('api/health/', health_check, name='health'),

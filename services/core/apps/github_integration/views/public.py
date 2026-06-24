@@ -6,9 +6,9 @@ from rest_framework.views import APIView
 
 from apps.projects.models import Project
 
-from .user import parse_github_url
 from ..fetcher import get_public_repo, get_public_repo_folders
 from ..tasks import import_public_repo_task
+from .user import parse_github_url
 
 
 class PublicRepoInfoView(APIView):

@@ -51,7 +51,8 @@ class TestFetchPublicRepoApi:
 class TestDownloadZipball:
     def test_basic_download(self):
         with patch('apps.common.github.requests.get') as mock_get:
-            import io, zipfile
+            import io
+            import zipfile
             buf = io.BytesIO()
             with zipfile.ZipFile(buf, 'w') as zf:
                 zf.writestr('repo-owner-sha/file.py', 'print("hello")')
@@ -66,7 +67,8 @@ class TestDownloadZipball:
 
     def test_with_file_filter(self):
         with patch('apps.common.github.requests.get') as mock_get:
-            import io, zipfile
+            import io
+            import zipfile
             buf = io.BytesIO()
             with zipfile.ZipFile(buf, 'w') as zf:
                 zf.writestr('repo/file.py', 'code')
@@ -81,7 +83,8 @@ class TestDownloadZipball:
 
     def test_folder_path_filter(self):
         with patch('apps.common.github.requests.get') as mock_get:
-            import io, zipfile
+            import io
+            import zipfile
             buf = io.BytesIO()
             with zipfile.ZipFile(buf, 'w') as zf:
                 zf.writestr('repo/src/main.py', 'code')

@@ -1,4 +1,3 @@
-import pytest
 
 from apps.projects.serializers import (
     ProjectFileSerializer,

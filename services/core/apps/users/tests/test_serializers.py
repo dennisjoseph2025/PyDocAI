@@ -1,3 +1,4 @@
+
 import pytest
 
 from apps.users.serializers import (
@@ -9,6 +10,7 @@ from apps.users.serializers import (
 
 
 class TestRegisterSerializer:
+    @pytest.mark.django_db
     def test_valid_data(self):
         data = {
             'email': 'new@test.com',
@@ -20,6 +22,7 @@ class TestRegisterSerializer:
         serializer = RegisterSerializer(data=data)
         assert serializer.is_valid()
 
+    @pytest.mark.django_db
     def test_password_mismatch(self):
         data = {
             'email': 'new@test.com',
@@ -47,6 +50,7 @@ class TestLoginSerializer:
         serializer = LoginSerializer(data=data)
         assert not serializer.is_valid()
 
+    @pytest.mark.django_db
     def test_nonexistent_user(self):
         data = {'email': 'nobody@test.com', 'password': 'pass123'}
         serializer = LoginSerializer(data=data)
@@ -60,6 +64,7 @@ class TestUserSerializer:
         assert serializer.data['name'] == user.name
         assert 'password' not in serializer.data
 
+    @pytest.mark.django_db
     def test_deserialize(self):
         data = {'email': 'test@test.com', 'name': 'Test', 'username': 'test'}
         serializer = UserSerializer(data=data)

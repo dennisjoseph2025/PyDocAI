@@ -245,7 +245,7 @@ def generate_universal_docs_task(self, project_id, mode):
 
 # ── GitHub Import (Universal, all file types) ────────────────
 
-from apps.common.github import download_zipball, fetch_public_repo_api
+from apps.common.github import download_zipball, fetch_public_repo_api  # noqa: E402
 
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=30)

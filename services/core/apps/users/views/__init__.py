@@ -1,7 +1,7 @@
-from .auth import RegisterView, LoginView, LogoutView, GithubAuthView, get_tokens
-from .profile import ProfileView, ChangePasswordView
 from .admin import UserListView
-from .password_reset import PasswordResetRequestView, PasswordResetConfirmView
+from .auth import GithubAuthView, LoginView, LogoutView, RegisterView, get_tokens
+from .password_reset import PasswordResetConfirmView, PasswordResetRequestView
+from .profile import ChangePasswordView, ProfileView
 
 __all__ = [
     'RegisterView',

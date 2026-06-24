@@ -1,12 +1,12 @@
 import logging
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.common.config import INTERNAL_API_KEY
-from apps.projects.models import Project, ProjectFile
-from apps.projects.serializers import ProjectSerializer, ProjectFileSerializer
+from apps.projects.models import Project
+from apps.projects.serializers import ProjectFileSerializer, ProjectSerializer
 
 logger = logging.getLogger(__name__)
 

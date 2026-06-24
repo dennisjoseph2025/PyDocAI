@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.common.pagination import PublicProjectPage
+
 from ..models import Project
 from ..serializers import PublicProjectListSerializer, PublicProjectSerializer
 from ..throttles import PublicRateThrottle
