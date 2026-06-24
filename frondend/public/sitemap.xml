@@ -12,4 +12,10 @@
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
+  <url>
+    <loc>https://pydocai.vercel.app/public/8c4795f4-3373-45e5-a0b6-182bdfaa6dc8</loc>
+    <lastmod>2026-06-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
