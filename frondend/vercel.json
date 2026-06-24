@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!sitemap\\.xml|robots\\.txt|favicon\\.\\w+|favicon-\\d+x\\d+\\.png|site\\.webmanifest|pydocai-og\\.svg|icons\\.svg).*)",
       "destination": "/index.html"
     }
   ]
