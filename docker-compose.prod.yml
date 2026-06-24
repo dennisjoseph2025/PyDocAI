@@ -1,17 +1,17 @@
 services:
   backend:
       build:
-        context: ./backend
-        dockerfile: Dockerfile
+        context: ./services/core
+        dockerfile: docker/Dockerfile
       restart: always
-      command: ["bash", "entrypoint.sh"]
+      command: ["bash", "docker/entrypoint.sh"]
       volumes:
-        - ./backend:/app
+        - ./services/core:/app
         - static_volume:/app/staticfiles
       ports:
         - "8000:8000"
       env_file:
-        - ./backend/.env
+        - ./services/core/env/.env
       environment:
         DJANGO_SETTINGS_MODULE: config.settings.production
         UV_LINK_MODE: copy
@@ -19,27 +19,27 @@ services:
 
   celery:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./services/core
+      dockerfile: docker/Dockerfile
     restart: always
     command: uv run celery -A config.celery worker --loglevel=info --concurrency=4 --max-tasks-per-child=10 --max-memory-per-child=500000
     volumes:
-      - ./backend:/app
+      - ./services/core:/app
     env_file:
-      - ./backend/.env
+      - ./services/core/env/.env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
 
   celery-beat:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./services/core
+      dockerfile: docker/Dockerfile
     restart: always
     command: uv run celery -A config.celery beat --loglevel=info
     volumes:
-      - ./backend:/app
+      - ./services/core:/app
     env_file:
-      - ./backend/.env
+      - ./services/core/env/.env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
 
