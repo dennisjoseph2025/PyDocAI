@@ -1,4 +1,3 @@
-import pytest
 
 from apps.feedback.serializers import FeedbackReplySerializer, FeedbackSerializer
 
@@ -19,7 +18,7 @@ class TestFeedbackSerializer:
             assert field in serializer.data
 
     def test_replies_included(self, feedback, user):
-        reply = feedback.replies.create(user=user, message='Reply')
+        feedback.replies.create(user=user, message='Reply')
         serializer = FeedbackSerializer(feedback)
         assert len(serializer.data['replies']) == 1
         assert serializer.data['replies'][0]['message'] == 'Reply'

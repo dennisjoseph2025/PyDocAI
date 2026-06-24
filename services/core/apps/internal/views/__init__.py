@@ -1,4 +1,4 @@
-from .receive import ProjectDetail, ProjectFileList, ReceiveParsedData, ReceiveAIDocs
+from .receive import ProjectDetail, ProjectFileList, ReceiveAIDocs, ReceiveParsedData
 
 __all__ = [
     'ProjectDetail',

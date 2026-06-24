@@ -6,7 +6,6 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.common.pagination import NoPagination
 from ..models import Project
 from ..serializers import ProjectListSerializer, ProjectSerializer
 from ..throttles import PublishRateThrottle

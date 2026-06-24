@@ -13,7 +13,7 @@ class ExportFolderDocsView(APIView):
             project_id_uuid = uuid.UUID(str(project_id))
             project = Project.objects.get(id=project_id_uuid)
         except (Project.DoesNotExist, ValueError):
-            raise Http404("Project not found")
+            raise Http404("Project not found") from None
 
         doc_type = request.query_params.get('type', 'all')
 

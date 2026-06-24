@@ -1,4 +1,4 @@
-from .feedback import FeedbackCreateView, FeedbackListView, AdminFeedbackView, AdminFeedbackResolveView
+from .feedback import AdminFeedbackResolveView, AdminFeedbackView, FeedbackCreateView, FeedbackListView
 from .replies import FeedbackReplyListCreateView
 
 __all__ = [

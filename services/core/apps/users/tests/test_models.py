@@ -1,4 +1,3 @@
-import pytest
 
 from apps.users.models import PasswordResetToken, User
 
@@ -47,6 +46,7 @@ class TestPasswordResetToken:
 
     def test_expired_token_invalid(self, user):
         from datetime import timedelta
+
         from django.utils import timezone
         token = PasswordResetToken.objects.create(user=user)
         token.created_at = timezone.now() - timedelta(hours=25)

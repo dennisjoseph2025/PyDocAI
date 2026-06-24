@@ -1,12 +1,12 @@
 from django.db.models import Count, Q
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.common.pagination import AdminUserPage
+
 from ..models import User
-from ..serializers import AdminUserSerializer, UserSerializer
+from ..serializers import AdminUserSerializer
 
 
 class UserListView(APIView):

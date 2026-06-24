@@ -1,4 +1,3 @@
-import pytest
 
 from apps.projects.models import Project, ProjectFile
 

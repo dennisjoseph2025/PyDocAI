@@ -1,5 +1,5 @@
-from .project import ProjectListView, ProjectDetailView, PublishProjectView
-from .public import PublicProjectListView, PublicProjectDetailView
+from .project import ProjectDetailView, ProjectListView, PublishProjectView
+from .public import PublicProjectDetailView, PublicProjectListView
 
 __all__ = [
     'ProjectListView',

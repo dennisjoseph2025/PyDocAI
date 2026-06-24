@@ -2,7 +2,6 @@ import pytest
 
 from apps.exports.generators import export_project_as_markdown
 
-
 pytestmark = pytest.mark.django_db
 
 

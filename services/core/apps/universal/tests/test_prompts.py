@@ -1,3 +1,5 @@
+import re
+
 from apps.universal.prompts import MAX_SOURCE_CHARS, get_prompt
 
 
@@ -26,8 +28,8 @@ class TestGetPrompt:
             project_name='Test',
             file_list=['main.py'],
         )
-        assert len(prompt) < len(large_source) + 5000
         assert '[truncated]' in prompt
+        assert len(prompt) < MAX_SOURCE_CHARS + 10000
 
     def test_escapes_code_blocks(self):
         prompt = get_prompt(
@@ -35,7 +37,9 @@ class TestGetPrompt:
             source_code='```dangerous```',
             project_name='Test',
         )
-        assert '```' not in prompt
+        match = re.search(r'Source code to document:\n```\n(.+?)\n```', prompt, re.DOTALL)
+        assert match is not None
+        assert '```' not in match.group(1)
 
     def test_max_chars_param(self):
         prompt = get_prompt(

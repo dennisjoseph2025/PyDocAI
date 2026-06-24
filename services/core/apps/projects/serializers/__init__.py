@@ -1,5 +1,5 @@
-from .project import ProjectFileSerializer, ProjectSerializer, ProjectListSerializer
-from .public import PublicProjectSerializer, PublicProjectListSerializer
+from .project import ProjectFileSerializer, ProjectListSerializer, ProjectSerializer
+from .public import PublicProjectListSerializer, PublicProjectSerializer
 
 __all__ = [
     'ProjectFileSerializer',

@@ -1,5 +1,5 @@
-from .user import UserReposView, RepoFoldersView, ImportRepoView, parse_github_url
-from .public import PublicRepoInfoView, PublicRepoFoldersView, ImportPublicRepoView
+from .public import ImportPublicRepoView, PublicRepoFoldersView, PublicRepoInfoView
+from .user import ImportRepoView, RepoFoldersView, UserReposView, parse_github_url
 
 __all__ = [
     'UserReposView',

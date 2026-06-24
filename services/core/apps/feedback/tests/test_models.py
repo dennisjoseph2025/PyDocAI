@@ -1,4 +1,3 @@
-import pytest
 
 from apps.feedback.models import Feedback, FeedbackReply
 

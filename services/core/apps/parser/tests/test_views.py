@@ -5,7 +5,6 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-
 pytestmark = pytest.mark.django_db
 
 
@@ -68,6 +67,7 @@ class TestAnalyseFolderView:
 
     def test_valid_zip(self, api_client, user):
         import zipfile
+
         from django.core.files.uploadedfile import SimpleUploadedFile
         api_client.force_authenticate(user=user)
         with patch('apps.parser.views.folder.parse_folder_task.delay'):

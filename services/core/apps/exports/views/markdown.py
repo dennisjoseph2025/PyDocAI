@@ -10,7 +10,7 @@ class ExportProjectMarkdownView(APIView):
         try:
             markdown = export_project_as_markdown(str(project_id))
         except Exception as e:
-            raise Http404(f"Export failed: {e}")
+            raise Http404(f"Export failed: {e}") from e
 
         return HttpResponse(
             markdown,
