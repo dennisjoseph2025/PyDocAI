@@ -1,8 +1,23 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { getPublicProjects } from '../api'
 import { IconSearch, IconGlobe, IconUser, IconClock, IconBook } from '../components/Icons'
 import Navbar from '../components/Navbar'
+
+const siteUrl = 'https://pydocai.vercel.app'
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Published Documentation — PyDocAI',
+  description: 'Browse AI-generated documentation published by the PyDocAI community. Search, discover, and learn from automated docs.',
+  url: `${siteUrl}/published`,
+  about: {
+    '@type': 'SoftwareApplication',
+    name: 'PyDocAI',
+  },
+}
 
 export default function Published() {
   const navigate = useNavigate()
@@ -51,6 +66,26 @@ export default function Published() {
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
+      <Helmet>
+        <title>Published Documentation — PyDocAI</title>
+        <meta name="description" content="Browse AI-generated documentation published by the PyDocAI community. Search, discover, and learn from automated docs for Python, Django, and more." />
+        <link rel="canonical" href={`${siteUrl}/published`} />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${siteUrl}/published`} />
+        <meta property="og:title" content="Published Documentation — PyDocAI" />
+        <meta property="og:description" content="Browse AI-generated documentation published by the PyDocAI community. Search, discover, and learn from automated docs." />
+        <meta property="og:image" content={`${siteUrl}/pydocai-og.svg`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:site_name" content="PyDocAI" />
+        <meta property="og:locale" content="en_US" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Published Documentation — PyDocAI" />
+        <meta name="twitter:description" content="Browse AI-generated documentation published by the PyDocAI community." />
+        <meta name="twitter:image" content={`${siteUrl}/pydocai-og.svg`} />
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
       <Navbar />
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full">
         <div className="mb-8">
