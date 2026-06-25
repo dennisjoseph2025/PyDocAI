@@ -19,7 +19,7 @@ export default function handler(req, res) {
     try {
       if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf-8')
-        res.setHeader('Content-Type', 'text/html')
+        res.setHeader('Content-Type', 'text/xml')
         res.setHeader('Cache-Control', 'public, max-age=3600')
         return res.status(200).send(content)
       }
