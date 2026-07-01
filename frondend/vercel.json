@@ -8,8 +8,8 @@
   ],
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://pydocai.duckdns.org/api/:path*"
+      "source": "/api/(.*)",
+      "destination": "https://pydocai.duckdns.org/api/$1"
     },
     {
       "source": "/(.*)",
