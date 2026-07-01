@@ -56,7 +56,9 @@ def generate_docs(req: GenerateRequest, background_tasks: BackgroundTasks, db: S
 
     update_project(req.project_id, {"status": "processing"})
 
-    files_data = get_project_files(req.project_id)
+    files_data = req.files_data
+    if not files_data:
+        files_data = get_project_files(req.project_id)
     if not files_data:
         raise HTTPException(400, "No parsed files found. Run parser first.")
 
