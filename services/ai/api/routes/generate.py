@@ -194,6 +194,7 @@ Output ONLY the README content."""
                     send_ai_docs(req.project_id, {
                         "generated_docs": generated,
                         "readme_docs": readme,
+                        "api_docs": api_docs,
                         "status": "done",
                     })
                 else:
