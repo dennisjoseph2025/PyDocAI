@@ -35,7 +35,12 @@ class ProjectListSerializer(serializers.ModelSerializer):
     file_count = serializers.SerializerMethodField()
 
     def get_file_count(self, obj):
-        return getattr(obj, 'file_count', obj.files.count())
+        count = getattr(obj, 'file_count', obj.files.count())
+        if count:
+            return count
+        if isinstance(obj.project_info, dict):
+            return obj.project_info.get('file_count', 0)
+        return 0
 
     class Meta:
         model = Project

@@ -54,5 +54,42 @@ services:
     ports:
       - "6432:5432"
 
+  fastapi-parser:
+    build:
+      context: ./services/parser
+      dockerfile: docker/Dockerfile
+    restart: always
+    container_name: pydocai-parser
+    env_file:
+      - ./services/core/env/.env
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@pgbouncer:5432/${DB_NAME}
+      INTERNAL_API_KEY: pydocai-internal-key
+    ports:
+      - "8002:8002"
+    depends_on:
+      - pgbouncer
+
+  fastapi-ai:
+    build:
+      context: ./services/ai
+      dockerfile: docker/Dockerfile
+    restart: always
+    container_name: pydocai-ai
+    env_file:
+      - ./services/core/env/.env
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@pgbouncer:5432/${DB_NAME}
+      DJANGO_INTERNAL_URL: http://backend:8000/api/internal
+      INTERNAL_API_KEY: pydocai-internal-key
+      EMBEDDING_MODEL: all-MiniLM-L6-v2
+    volumes:
+      - model_cache:/root/.cache/huggingface
+    ports:
+      - "8003:8003"
+    depends_on:
+      - pgbouncer
+
 volumes:
   static_volume:
+  model_cache:

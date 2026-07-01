@@ -7,16 +7,16 @@ import time as _time
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from sqlalchemy.orm import Session
 
-from ...schemas.requests import GenerateRequest
-from ...schemas.responses import GenerateResponse
-from ...services.groq import call_groq
-from ...services.markdown import sanitize_markdown
-from ...services.generation import generate_file_docs, generate_project_summary, mock_docs, retrieve_project_context
-from ...services.docs_builder import build_api_docs
-from ...common.django_client import get_project, get_project_files, send_ai_docs, update_project
-from ...rag import embed_and_store_chunks
-from ..deps import get_db, verify_internal_key
-from ...config.config import settings
+from schemas.requests import GenerateRequest
+from schemas.responses import GenerateResponse
+from services.groq import call_groq
+from services.markdown import sanitize_markdown
+from services.generation import generate_file_docs, generate_project_summary, mock_docs, retrieve_project_context
+from services.docs_builder import build_api_docs
+from common.django_client import get_project, get_project_files, send_ai_docs, update_project
+from rag import embed_and_store_chunks
+from api.deps import get_db, verify_internal_key
+from config.config import settings
 
 router = APIRouter()
 logger = logging.getLogger("ai.generate")
@@ -56,7 +56,9 @@ def generate_docs(req: GenerateRequest, background_tasks: BackgroundTasks, db: S
 
     update_project(req.project_id, {"status": "processing"})
 
-    files_data = get_project_files(req.project_id)
+    files_data = req.files_data
+    if not files_data:
+        files_data = get_project_files(req.project_id)
     if not files_data:
         raise HTTPException(400, "No parsed files found. Run parser first.")
 
@@ -94,7 +96,6 @@ def generate_docs(req: GenerateRequest, background_tasks: BackgroundTasks, db: S
                             fh.write(content)
 
                 summary = generate_project_summary(temp_dir, project.get("name"))
-                update_project(req.project_id, {"project_info": summary})
 
                 if req.use_ai and settings.GROQ_API_KEY:
                     try:
@@ -129,6 +130,7 @@ def generate_docs(req: GenerateRequest, background_tasks: BackgroundTasks, db: S
                     has_root_req = any(f.get("file_path") == "requirements.txt" for f in files_data)
                     has_root_manage = any(f.get("file_path") == "manage.py" for f in files_data)
                     cd_dir = "." if (has_root_req or has_root_manage) else (repo_dir or ".")
+                    pm_cmd = "pip install -r requirements.txt"
 
                     project_context = _build_project_context(
                         project, summary, fw_name, fw_block, tree_trunc,
@@ -191,6 +193,8 @@ Output ONLY the README content."""
                     send_ai_docs(req.project_id, {
                         "generated_docs": generated,
                         "readme_docs": readme,
+                        "api_docs": api_docs,
+                        "project_info": summary,
                         "status": "done",
                     })
                 else:
@@ -209,6 +213,7 @@ Mock project documentation for {project.get('name')}.
                     send_ai_docs(req.project_id, {
                         "generated_docs": sanitize_markdown(fallback),
                         "readme_docs": sanitize_markdown(fallback),
+                        "project_info": summary,
                         "status": "done",
                     })
 
