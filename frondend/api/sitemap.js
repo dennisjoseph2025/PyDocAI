@@ -20,6 +20,7 @@ export default function handler(req, res) {
       if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf-8')
         res.setHeader('Content-Type', 'text/xml')
+        res.setHeader('X-Robots-Tag', 'noindex')
         res.setHeader('Cache-Control', 'public, max-age=3600')
         return res.status(200).send(content)
       }
