@@ -64,7 +64,7 @@ const jsonLd = {
   operatingSystem: 'Web',
   description: 'AI-powered documentation generator for Python, Django, and any programming language. Upload code or connect a Git repo to generate comprehensive documentation automatically.',
   url: siteUrl,
-  author: { '@type': 'Organization', name: 'PyDocAI' },
+  author: { '@type': 'Person', name: 'Denjo (Dennis Joseph)', url: 'https://dennis-r.vercel.app/' },
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
 }
 
@@ -76,13 +76,13 @@ export default function Home() {
   return (
     <div className="relative z-10 flex flex-col bg-bg-primary">
       <Helmet>
-        <title>PyDocAI — AI-Powered Documentation Generator for Any Language</title>
-        <meta name="description" content="Upload your Django project or paste code from any language — AI generates beautiful, comprehensive docs. Free universal documentation generator." />
+        <title>PyDocAI by Denjo — AI-Powered Documentation Generator for Any Language</title>
+        <meta name="description" content="Upload your Django project or paste code from any language — AI generates beautiful, comprehensive docs. Created by Denjo (Dennis Joseph). Free universal documentation generator." />
         <link rel="canonical" href={siteUrl} />
-        <meta property="og:title" content="PyDocAI — AI-Powered Documentation Generator for Any Language" />
+        <meta property="og:title" content="PyDocAI by Denjo — AI-Powered Documentation Generator for Any Language" />
         <meta property="og:description" content="Upload your Django project or paste code from any language — AI generates beautiful, comprehensive docs." />
         <meta property="og:url" content={siteUrl} />
-        <meta name="twitter:title" content="PyDocAI — AI-Powered Documentation Generator for Any Language" />
+        <meta name="twitter:title" content="PyDocAI by Denjo — AI-Powered Documentation Generator for Any Language" />
         <meta name="twitter:description" content="Upload your Django project or paste code from any language — AI generates beautiful, comprehensive docs." />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>

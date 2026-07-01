@@ -84,7 +84,7 @@ graph LR
     D -->|9. return to UI| F
     F -->|10. publish| N
     N -->|PATCH publish| D
-    D -->|update visibility| PG
+    D -->|update visibility| PGV
     D -.->|OAuth| GH
     A -.->|AI inference| G
     D ---|pooled conns| PB

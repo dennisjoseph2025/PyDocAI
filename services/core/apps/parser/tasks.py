@@ -43,6 +43,7 @@ def parse_folder_task(self, project_id, py_files, zip_base64=None, user_descript
         zf = zipfile.ZipFile(io.BytesIO(zip_data))
 
         parsed_count = 0
+        files_data = []
         for file_path in py_files:
             if should_exclude(file_path):
                 continue
@@ -50,12 +51,21 @@ def parse_folder_task(self, project_id, py_files, zip_base64=None, user_descript
                 content = zf.read(file_path).decode("utf-8", errors="ignore")
                 files = {"file": (file_path.split("/")[-1], content.encode("utf-8"), "text/x-python")}
                 data = {"project_id": str(project_id), "name": project.name, "file_path": file_path}
-                _call_fastapi("POST", f"{PARSER_URL}/api/parser/file/", files=files, data=data)
+                resp = _call_fastapi("POST", f"{PARSER_URL}/api/parser/file/", files=files, data=data)
+                files_data.append({
+                    "file_path": resp["file_path"],
+                    "file_name": resp["file_name"],
+                    "content": resp["content"],
+                    "parsed_data": resp["parsed"],
+                })
                 parsed_count += 1
             except Exception as e:
                 logger.warning(f"Error sending {file_path} to parser: {e}")
 
-        ai_resp = _call_fastapi("POST", f"{AI_URL}/api/ai/generate/", json={"project_id": str(project_id)})
+        ai_resp = _call_fastapi("POST", f"{AI_URL}/api/ai/generate/", json={
+            "project_id": str(project_id),
+            "files_data": files_data,
+        })
 
         project.refresh_from_db()
 
@@ -88,9 +98,18 @@ def parse_and_generate_docs_task(self, project_id, source_code, file_name, file_
 
         files = {"file": (file_name, source_code.encode("utf-8"), "text/x-python")}
         data = {"project_id": str(project_id), "name": project.name}
-        _call_fastapi("POST", f"{PARSER_URL}/api/parser/file/", files=files, data=data)
+        resp = _call_fastapi("POST", f"{PARSER_URL}/api/parser/file/", files=files, data=data)
 
-        ai_resp = _call_fastapi("POST", f"{AI_URL}/api/ai/generate/", json={"project_id": str(project_id)})
+        files_data = [{
+            "file_path": resp["file_path"],
+            "file_name": resp["file_name"],
+            "content": resp["content"],
+            "parsed_data": resp["parsed"],
+        }]
+        ai_resp = _call_fastapi("POST", f"{AI_URL}/api/ai/generate/", json={
+            "project_id": str(project_id),
+            "files_data": files_data,
+        })
 
         project.refresh_from_db()
 
