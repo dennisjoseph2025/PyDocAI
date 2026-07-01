@@ -96,7 +96,6 @@ def generate_docs(req: GenerateRequest, background_tasks: BackgroundTasks, db: S
                             fh.write(content)
 
                 summary = generate_project_summary(temp_dir, project.get("name"))
-                update_project(req.project_id, {"project_info": summary})
 
                 if req.use_ai and settings.GROQ_API_KEY:
                     try:
@@ -195,6 +194,7 @@ Output ONLY the README content."""
                         "generated_docs": generated,
                         "readme_docs": readme,
                         "api_docs": api_docs,
+                        "project_info": summary,
                         "status": "done",
                     })
                 else:
@@ -213,6 +213,7 @@ Mock project documentation for {project.get('name')}.
                     send_ai_docs(req.project_id, {
                         "generated_docs": sanitize_markdown(fallback),
                         "readme_docs": sanitize_markdown(fallback),
+                        "project_info": summary,
                         "status": "done",
                     })
 
