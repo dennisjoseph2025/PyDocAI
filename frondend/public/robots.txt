@@ -11,4 +11,4 @@ Disallow: /profile
 Disallow: /feedback
 Disallow: /admin/
 
-Sitemap: https://pydocai.vercel.app/api/sitemap
+Sitemap: https://pydocai.vercel.app/sitemap.xml
